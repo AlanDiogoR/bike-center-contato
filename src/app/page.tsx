@@ -3,12 +3,12 @@ import { Logo } from "@/components/Logo";
 
 export default function HomePage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#080808] via-[#101010] to-[#080808]">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-zinc-900 via-zinc-800/95 to-zinc-900">
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
+        className="pointer-events-none absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 20% 20%, #3b82f6 0, transparent 45%), radial-gradient(circle at 80% 0%, #22c55e 0, transparent 40%)",
+            "radial-gradient(circle at 20% 20%, #3b82f6 0, transparent 50%), radial-gradient(circle at 80% 0%, #22c55e 0, transparent 45%)",
         }}
         aria-hidden
       />
@@ -17,7 +17,7 @@ export default function HomePage() {
         <div className="w-full flex-1">
           <LinksSection />
         </div>
-        <footer className="mt-8 w-full max-w-md px-4 pb-8 text-center text-xs text-zinc-600">
+        <footer className="mt-8 w-full max-w-md px-4 pb-8 text-center text-xs text-zinc-500">
           Bike Center Fartura © 2026 - Acelerando com você.
         </footer>
       </div>

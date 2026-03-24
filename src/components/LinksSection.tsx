@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaExternalLinkAlt, FaWhatsapp } from "react-icons/fa";
+import { FaExternalLinkAlt, FaUsers, FaWhatsapp } from "react-icons/fa";
 import {
   SiFacebook,
   SiGooglemaps,
@@ -13,6 +13,7 @@ import {
   googleMapsLink,
   mercadoLivreLink,
   socialLinks,
+  whatsappGroupLink,
   whatsappSalesLinks,
 } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
@@ -97,6 +98,33 @@ export function LinksSection() {
             </a>
           </motion.div>
         ))}
+
+        <motion.div variants={item}>
+          <a
+            href={whatsappGroupLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackOutboundClick(
+                whatsappGroupLink.label,
+                whatsappGroupLink.href,
+                "whatsapp",
+              )
+            }
+            className="group flex items-center gap-4 overflow-hidden rounded-xl border border-white/20 bg-[#1fa855] px-5 py-4 text-left font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#25D366] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/15">
+              <FaUsers className="h-6 w-6 text-white" aria-hidden />
+            </span>
+            <span className="flex-1 text-base leading-snug">
+              {whatsappGroupLink.label}
+            </span>
+            <FaExternalLinkAlt
+              className="h-5 w-5 shrink-0 opacity-85 transition group-hover:opacity-100"
+              aria-hidden
+            />
+          </a>
+        </motion.div>
 
         <motion.div variants={item}>
           <a

@@ -5,6 +5,7 @@ import {
   googleMapsLink,
   mercadoLivreLink,
   socialLinks,
+  whatsappGroupLink,
   whatsappSalesLinks,
 } from "./links";
 
@@ -28,7 +29,8 @@ describe("links", () => {
     });
   });
 
-  it("expõe link do Mercado Livre, Google Maps e redes sociais", () => {
+  it("expõe grupo do WhatsApp, Mercado Livre, Google Maps e redes sociais", () => {
+    expect(whatsappGroupLink.href).toContain("chat.whatsapp.com");
     expect(mercadoLivreLink.href).toContain("mercadolivre.com.br");
     expect(googleMapsLink.href).toContain("maps.app.goo.gl");
     expect(socialLinks.map((s) => s.id)).toEqual([
