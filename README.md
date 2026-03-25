@@ -15,7 +15,7 @@ Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Fra
 
 Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaUsers`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
 
-A logo usa **`<img>`** em cores naturais (sem `mix-blend`, para não escurecer) dentro de um card **`bg-white`**: o branco do arquivo funde com o fundo do card e some o “retângulo” no meio da página escura.
+A logo usa fundo **`bg-zinc-900`** (alinhado ao topo da página) + **`mix-blend-multiply`** na imagem para o branco do JPEG sumir no escuro, com **`brightness` / `contrast` / `saturate`** para a arte não ficar apagada. Para acabamento perfeito sem truque de CSS, use **`public/logo.png`** com fundo transparente.
 
 O conjunto **Simple Icons** não inclui o logotipo oficial do Mercado Livre; o botão da loja usa **`SiMercadopago`** (mesmo ecossistema Mercado) com cor **#3483FA** sobre o fundo amarelo do card, alinhado à identidade visual do marketplace.
 
