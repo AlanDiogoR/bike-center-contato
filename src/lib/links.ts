@@ -12,12 +12,12 @@ export function buildWhatsAppHref(phoneDigits: string): string {
 export const whatsappSalesLinks = [
   {
     id: "claro",
-    label: "Falar com Vendas (Claro)",
+    label: "Conversar no Whats (Claro)",
     href: buildWhatsAppHref(PHONE_CLARO),
   },
   {
     id: "vivo",
-    label: "Falar com Vendas (Vivo)",
+    label: "Conversar no Whats (Vivo)",
     href: buildWhatsAppHref(PHONE_VIVO),
   },
 ] as const;
@@ -27,9 +27,21 @@ export const whatsappGroupLink = {
   href: "https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp",
 } as const;
 
+function buildMercadoLivreStoreUrl(): string {
+  const u = new URL(
+    "https://lista.mercadolivre.com.br/_CustId_569984748",
+  );
+  u.searchParams.set("item_id", "MLB6427585964");
+  u.searchParams.set("category_id", "MLB243168");
+  u.searchParams.set("seller_id", "569984748");
+  u.searchParams.set("client", "recoview-selleritems");
+  u.searchParams.set("recos_listing", "true");
+  return u.toString();
+}
+
 export const mercadoLivreLink = {
   label: "Nossa Loja no Mercado Livre",
-  href: "https://lista.mercadolivre.com.br/_CustId_569984748?item_id=MLB6427585964&category_id=MLB243168&seller_id=569984748&client=recoview-selleritems&recos_listing=true#origin=vip&component=sellerData&typeSeller=classic",
+  href: buildMercadoLivreStoreUrl(),
 } as const;
 
 export const googleMapsLink = {

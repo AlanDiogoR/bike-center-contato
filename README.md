@@ -15,9 +15,13 @@ Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Fra
 
 Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaUsers`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
 
-A logo é exibida em um **cartão claro** (`bg-zinc-100`) para boa leitura e para o fundo branco do arquivo fundir-se ao card, sem `mix-blend` que escurecia demais a arte.
+A logo usa **`mix-blend-multiply`** no `next/image` (sem cartão branco): o branco do arquivo funde com o fundo da página, deixando só a arte visível.
 
 O conjunto **Simple Icons** não inclui o logotipo oficial do Mercado Livre; o botão da loja usa **`SiMercadopago`** (mesmo ecossistema Mercado) com cor **#3483FA** sobre o fundo amarelo do card, alinhado à identidade visual do marketplace.
+
+**Favicon:** `src/app/icon.svg` (marca “BC”) + redirecionamento de `/favicon.ico` → `/icon.svg` no `next.config.mjs` para navegadores que ainda pedem o `.ico`.
+
+**Link da loja no ML:** a URL é montada com `URL` + `searchParams` (sem `#...` no final), o que evita links cortados em apps como WhatsApp e Instagram.
 
 ## Variáveis de ambiente
 

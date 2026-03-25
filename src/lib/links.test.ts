@@ -31,7 +31,10 @@ describe("links", () => {
 
   it("expõe grupo do WhatsApp, Mercado Livre, Google Maps e redes sociais", () => {
     expect(whatsappGroupLink.href).toContain("chat.whatsapp.com");
-    expect(mercadoLivreLink.href).toContain("mercadolivre.com.br");
+    const ml = new URL(mercadoLivreLink.href);
+    expect(ml.hostname).toBe("lista.mercadolivre.com.br");
+    expect(ml.searchParams.get("seller_id")).toBe("569984748");
+    expect(ml.hash).toBe("");
     expect(googleMapsLink.href).toContain("maps.app.goo.gl");
     expect(socialLinks.map((s) => s.id)).toEqual([
       "instagram",
