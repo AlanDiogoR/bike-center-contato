@@ -15,7 +15,7 @@ Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Fra
 
 Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaUsers`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
 
-A logo usa fundo **`bg-zinc-900`** (alinhado ao topo da página) + **`mix-blend-multiply`** na imagem para o branco do JPEG sumir no escuro, com **`brightness` / `contrast` / `saturate`** para a arte não ficar apagada. Para acabamento perfeito sem truque de CSS, use **`public/logo.png`** com fundo transparente.
+A logo usa **`public/logo.png`** (fundo transparente) com **`next/image`**, dentro de um **badge circular** só com borda na cor da marca (**`#ec6e37`**), sem fundo branco.
 
 O conjunto **Simple Icons** não inclui o logotipo oficial do Mercado Livre; o botão da loja usa **`SiMercadopago`** (mesmo ecossistema Mercado) com cor **#3483FA** sobre o fundo amarelo do card, alinhado à identidade visual do marketplace.
 
@@ -58,7 +58,7 @@ O workflow em `.github/workflows/ci.yml` executa lint, testes e build em cada pu
 - `src/components/LinksSection.tsx` — botões e animações
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
 - `src/lib/links.ts` — URLs (WhatsApp vendas, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://maps.app.goo.gl/r3otm9rrYUj6jsMu7), redes) e mensagem padrão do WhatsApp (consultora Rita)
-- `public/logo.jpeg` — logo da loja
+- `public/logo.png` — logo da loja (PNG com transparência)
 
 ## Licença
 

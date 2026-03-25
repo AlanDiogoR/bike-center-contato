@@ -53,9 +53,9 @@ export const metadata: Metadata = {
     description,
     images: [
       {
-        url: "/logo.jpeg",
+        url: "/logo.png",
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: "Bike Center Fartura — logo",
       },
     ],
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/logo.jpeg"],
+    images: ["/logo.png"],
   },
   robots: { index: true, follow: true },
 };
