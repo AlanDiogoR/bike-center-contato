@@ -27,21 +27,14 @@ export const whatsappGroupLink = {
   href: "https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp",
 } as const;
 
-function buildMercadoLivreStoreUrl(): string {
-  const u = new URL(
-    "https://lista.mercadolivre.com.br/_CustId_569984748",
-  );
-  u.searchParams.set("item_id", "MLB6427585964");
-  u.searchParams.set("category_id", "MLB243168");
-  u.searchParams.set("seller_id", "569984748");
-  u.searchParams.set("client", "recoview-selleritems");
-  u.searchParams.set("recos_listing", "true");
-  return u.toString();
-}
+const MERCADO_LIVRE_URL_DEFAULT =
+  "https://lista.mercadolivre.com.br/_CustId_569984748?item_id=MLB6427585964&category_id=MLB243168&seller_id=569984748&client=recoview-selleritems&recos_listing=true#origin=vip&component=sellerData&typeSeller=classic";
 
 export const mercadoLivreLink = {
   label: "Nossa Loja no Mercado Livre",
-  href: buildMercadoLivreStoreUrl(),
+  href:
+    process.env.NEXT_PUBLIC_MERCADO_LIVRE_URL?.trim() ||
+    MERCADO_LIVRE_URL_DEFAULT,
 } as const;
 
 export const googleMapsLink = {
