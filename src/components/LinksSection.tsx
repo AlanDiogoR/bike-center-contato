@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaExternalLinkAlt, FaUsers, FaWhatsapp } from "react-icons/fa";
+import { FaClock, FaExternalLinkAlt, FaMapMarkerAlt, FaUsers, FaWhatsapp } from "react-icons/fa";
 import {
   SiFacebook,
   SiGooglemaps,
@@ -11,8 +11,10 @@ import {
 } from "react-icons/si";
 import {
   googleMapsLink,
+  highlightOffer,
   mercadoLivreLink,
   socialLinks,
+  store,
   whatsappGroupLink,
   whatsappSalesLinks,
 } from "@/lib/links";
@@ -76,6 +78,32 @@ export function LinksSection() {
       animate="show"
     >
       <div className="flex flex-col gap-4">
+        {highlightOffer.enabled ? (
+          <motion.div variants={item}>
+            <a
+              href={highlightOffer.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackOutboundClick(
+                  highlightOffer.label,
+                  highlightOffer.href,
+                  "highlight",
+                )
+              }
+              className="group relative flex items-center gap-4 overflow-hidden rounded-xl bg-[#ec6e37] px-5 py-4 text-left font-semibold text-white shadow-lg shadow-orange-950/40 transition-transform hover:-translate-y-0.5 hover:bg-[#f07d4a] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80"
+            >
+              <span className="flex-1 text-base leading-snug">
+                {highlightOffer.label}
+              </span>
+              <FaExternalLinkAlt
+                className="h-5 w-5 shrink-0 opacity-80 transition group-hover:opacity-100"
+                aria-hidden
+              />
+            </a>
+          </motion.div>
+        ) : null}
+
         {whatsappSalesLinks.map((link) => (
           <motion.div key={link.id} variants={item}>
             <a
@@ -157,6 +185,33 @@ export function LinksSection() {
           </a>
         </motion.div>
 
+        <motion.section
+          variants={item}
+          aria-labelledby="loja-fisica-heading"
+          className="rounded-xl border border-[#ec6e37]/25 bg-zinc-900/80 px-5 py-4 shadow-md"
+        >
+          <h2
+            id="loja-fisica-heading"
+            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ec6e37]"
+          >
+            Loja física
+          </h2>
+          <p className="mt-3 flex items-start gap-3 text-sm font-medium leading-snug text-zinc-100">
+            <FaMapMarkerAlt
+              className="mt-0.5 h-4 w-4 shrink-0 text-[#ec6e37]"
+              aria-hidden
+            />
+            <span>{store.address.display}</span>
+          </p>
+          <p className="mt-2.5 flex items-start gap-3 text-sm font-medium leading-snug text-zinc-100">
+            <FaClock
+              className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400"
+              aria-hidden
+            />
+            <span>{store.hours.display}</span>
+          </p>
+        </motion.section>
+
         <motion.div variants={item}>
           <a
             href={googleMapsLink.href}
@@ -196,26 +251,23 @@ export function LinksSection() {
         Redes sociais
       </motion.p>
 
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {socialLinks.map((link) => (
           <motion.div key={link.id} variants={item}>
             <a
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={link.label}
               onClick={() =>
                 trackOutboundClick(link.label, link.href, "social")
               }
-              className="group flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3.5 text-left text-zinc-100 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
+              className="group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-3 text-center text-zinc-100 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
             >
               <SocialIcon kind={link.icon} />
-              <span className="flex-1 text-sm font-medium leading-snug">
-                {link.label}
+              <span className="text-[11px] font-medium leading-tight text-zinc-300">
+                {link.shortLabel}
               </span>
-              <FaExternalLinkAlt
-                className="h-4 w-4 shrink-0 text-zinc-500 transition group-hover:text-zinc-300"
-                aria-hidden
-              />
             </a>
           </motion.div>
         ))}

@@ -31,6 +31,8 @@ Copie `.env.example` para `.env.local` e ajuste:
 |----------|-----|
 | `NEXT_PUBLIC_SITE_URL` | URL canônica (Open Graph, sitemap, compartilhamento) |
 | `NEXT_PUBLIC_MERCADO_LIVRE_URL` | Link completo da loja no Mercado Livre (opcional; se vazio, usa o padrão em `links.ts`) |
+| `NEXT_PUBLIC_HIGHLIGHT_LABEL` | Texto do slot de oferta no topo (opcional; vazio = oculto) |
+| `NEXT_PUBLIC_HIGHLIGHT_HREF` | URL do slot de oferta (obrigatório junto com o label para exibir) |
 | `NEXT_PUBLIC_GTM_ID` | Google Tag Manager (opcional) |
 | `NEXT_PUBLIC_FB_PIXEL_ID` | Meta Pixel (opcional) |
 
@@ -57,7 +59,7 @@ O workflow em `.github/workflows/ci.yml` executa lint, testes e build em cada pu
 - `src/app/layout.tsx` — metadata, SEO, JSON-LD
 - `src/components/LinksSection.tsx` — botões e animações
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
-- `src/lib/links.ts` — URLs (WhatsApp vendas, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://maps.app.goo.gl/r3otm9rrYUj6jsMu7), redes) e mensagem padrão do WhatsApp (consultora Rita)
+- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797) com destino nas coordenadas do pin oficial, redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
 - `public/logo.png` — logo da loja (PNG com transparência)
 
 ## Licença

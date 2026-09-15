@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
+import { googleMapsPlaceLink, store, whatsappSalesLinks } from "@/lib/links";
 import "./globals.css";
 
 const inter = Inter({
@@ -11,7 +12,7 @@ const inter = Inter({
 
 const title = "Bike Center Fartura | Motos, Bicicletas e Acessórios";
 const description =
-  "A sua loja especializada em motos e bicicletas em Fartura/SP. Venda, compra, troca e a melhor loja no Mercado Livre. Fale com nossos consultores!";
+  "Motos, bicicletas e acessórios em Fartura/SP. Rua Mário Stella, 355. Seg–Sex 8h–18h · Sáb 8h–13h. Fale no WhatsApp.";
 
 const keywords = [
   "motos em fartura",
@@ -19,6 +20,8 @@ const keywords = [
   "comprar moto seminova",
   "bike center fartura",
   "acessórios para motos",
+  "rua mário stella fartura",
+  "oficina de motos fartura",
 ];
 
 const siteUrl =
@@ -27,14 +30,43 @@ const siteUrl =
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  name: "Bike Center Fartura",
+  name: store.name,
   description,
   url: siteUrl,
+  telephone: whatsappSalesLinks.map((link) => `+${link.phoneDigits}`),
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Fartura",
-    addressRegion: "SP",
-    addressCountry: "BR",
+    streetAddress: store.address.street,
+    addressLocality: store.address.city,
+    addressRegion: store.address.state,
+    postalCode: store.address.postalCode,
+    addressCountry: store.address.country,
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      opens: store.hours.weekdayOpens,
+      closes: store.hours.weekdayCloses,
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: store.hours.saturdayOpens,
+      closes: store.hours.saturdayCloses,
+    },
+  ],
+  hasMap: googleMapsPlaceLink.href,
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: store.geo.latitude,
+    longitude: store.geo.longitude,
   },
 };
 

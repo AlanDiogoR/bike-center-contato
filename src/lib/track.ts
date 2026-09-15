@@ -1,7 +1,7 @@
 export function trackOutboundClick(
   label: string,
   destination: string,
-  category: "whatsapp" | "mercado_livre" | "maps" | "social",
+  category: "whatsapp" | "mercado_livre" | "maps" | "social" | "highlight",
 ): void {
   if (typeof window === "undefined") return;
   const w = window as Window & { dataLayer?: Record<string, unknown>[] };
