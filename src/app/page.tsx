@@ -1,5 +1,6 @@
 import { LinksSection } from "@/components/LinksSection";
 import { Logo } from "@/components/Logo";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function HomePage() {
   return (
@@ -17,9 +18,7 @@ export default function HomePage() {
         <div className="w-full flex-1">
           <LinksSection />
         </div>
-        <footer className="mt-8 w-full max-w-md px-4 pb-8 text-center text-xs text-zinc-500">
-          Bike Center Fartura © 2026 - Acelerando com você.
-        </footer>
+        <SiteFooter />
       </div>
     </main>
   );

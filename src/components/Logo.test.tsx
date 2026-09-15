@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Logo } from "./Logo";
+import { googleMapsLink, store } from "@/lib/links";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -32,5 +33,12 @@ describe("Logo", () => {
     render(<Logo />);
     const img = screen.getByAltText(/Bike Center Fartura/i);
     expect(img).toHaveAttribute("src", "/logo.png");
+  });
+
+  it("mostra a tagline e a linha de confiança com link para o Maps", () => {
+    render(<Logo />);
+    expect(screen.getByText(store.tagline)).toBeInTheDocument();
+    const trust = screen.getByRole("link", { name: store.trustLine });
+    expect(trust).toHaveAttribute("href", googleMapsLink.href);
   });
 });
