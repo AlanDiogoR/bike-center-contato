@@ -12,7 +12,7 @@ const inter = Inter({
 
 const title = "Bike Center Fartura | Motos, Bicicletas e Acessórios";
 const description =
-  "Motos, bicicletas e acessórios em Fartura/SP. Rua Mário Stella, 355 — Vila Nova. Seg–Sex 8h–17h. WhatsApp para vendas, orçamento, oficina e peças.";
+  "Motos, bicicletas e acessórios em Fartura/SP. Rua Mário Stella, 355. Seg–Sex 8h–18h · Sáb 8h–13h. Fale no WhatsApp.";
 
 const keywords = [
   "motos em fartura",
@@ -33,27 +33,35 @@ const jsonLd = {
   name: store.name,
   description,
   url: siteUrl,
-  foundingDate: store.foundingDate,
   telephone: whatsappSalesLinks.map((link) => `+${link.phoneDigits}`),
   address: {
     "@type": "PostalAddress",
-    streetAddress: `${store.address.street} — ${store.address.neighborhood}`,
+    streetAddress: store.address.street,
     addressLocality: store.address.city,
     addressRegion: store.address.state,
+    postalCode: store.address.postalCode,
     addressCountry: store.address.country,
   },
-  openingHoursSpecification: {
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-    ],
-    opens: store.hours.schemaOpens,
-    closes: store.hours.schemaCloses,
-  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+      ],
+      opens: store.hours.weekdayOpens,
+      closes: store.hours.weekdayCloses,
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: "Saturday",
+      opens: store.hours.saturdayOpens,
+      closes: store.hours.saturdayCloses,
+    },
+  ],
   hasMap: googleMapsLink.href,
 };
 

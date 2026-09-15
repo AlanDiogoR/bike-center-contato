@@ -8,7 +8,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-2 w-full max-w-md px-4 pb-8 text-center text-xs leading-relaxed text-zinc-500">
       <p className="font-medium text-zinc-400">{store.name}</p>
-      <p>{store.address.display}</p>
+      <p>{store.address.napDisplay}</p>
       <p>WhatsApp {phones}</p>
       <p>
         {store.city}/{store.state}

@@ -203,17 +203,12 @@ export function LinksSection() {
             />
             <span>{store.address.display}</span>
           </p>
-          <p className="mt-2.5 flex items-start gap-3 text-sm leading-snug text-zinc-300">
+          <p className="mt-2.5 flex items-start gap-3 text-sm font-medium leading-snug text-zinc-100">
             <FaClock
               className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400"
               aria-hidden
             />
-            <span>
-              <span className="font-medium text-zinc-100">{store.hours.display}</span>
-              <span className="mt-0.5 block text-xs text-zinc-500">
-                {store.hours.extraNote}
-              </span>
-            </span>
+            <span>{store.hours.display}</span>
           </p>
         </motion.section>
 

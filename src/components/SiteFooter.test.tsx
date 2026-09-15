@@ -7,7 +7,7 @@ describe("SiteFooter", () => {
   it("expõe NAP em texto: nome, endereço, WhatsApp e cidade", () => {
     render(<SiteFooter />);
     expect(screen.getAllByText(store.name).length).toBeGreaterThan(0);
-    expect(screen.getByText(store.address.display)).toBeInTheDocument();
+    expect(screen.getByText(store.address.napDisplay)).toBeInTheDocument();
     expect(
       screen.getByText("WhatsApp (14) 99166-7793 · (14) 99632-5919"),
     ).toBeInTheDocument();

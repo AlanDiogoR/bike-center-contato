@@ -19,37 +19,38 @@ export function formatBrMobileDisplay(phoneDigits: string): string {
 export const store = {
   name: "Bike Center Fartura",
   tagline: "Motos, bicicletas e acessórios em Fartura/SP",
-  trustLine: "Há 31 anos em Fartura",
-  foundingDate: "1994-11-22",
+  trustLine: "Há mais de 30 anos em Fartura",
   city: "Fartura",
   state: "SP",
   address: {
     street: "Rua Mário Stella, 355",
-    neighborhood: "Vila Nova",
     city: "Fartura",
     state: "SP",
     country: "BR",
-    display: "Rua Mário Stella, 355 — Vila Nova, Fartura/SP",
+    postalCode: "18870-000",
+    display: "Rua Mário Stella, 355 · Fartura/SP",
+    napDisplay: "Rua Mário Stella, 355 — CEP 18870-000 — Fartura/SP",
   },
   hours: {
-    display: "Seg–Sex 8h–17h",
-    schemaOpens: "08:00",
-    schemaCloses: "17:00",
-    extraNote: "Outros horários pelo WhatsApp",
+    display: "Seg–Sex 8h–18h · Sáb 8h–13h",
+    weekdayOpens: "08:00",
+    weekdayCloses: "18:00",
+    saturdayOpens: "08:00",
+    saturdayCloses: "13:00",
   },
 } as const;
 
 export const whatsappSalesLinks = [
   {
     id: "claro",
-    label: "Vendas e orçamento (Claro)",
+    label: "Conversar no Whats (Claro)",
     href: buildWhatsAppHref(PHONE_CLARO),
     phoneDigits: PHONE_CLARO,
     phoneDisplay: formatBrMobileDisplay(PHONE_CLARO),
   },
   {
     id: "vivo",
-    label: "Oficina e peças (Vivo)",
+    label: "Conversar no Whats (Vivo)",
     href: buildWhatsAppHref(PHONE_VIVO),
     phoneDigits: PHONE_VIVO,
     phoneDisplay: formatBrMobileDisplay(PHONE_VIVO),

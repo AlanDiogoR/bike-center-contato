@@ -12,18 +12,18 @@ vi.mock("@/lib/track", () => ({
 }));
 
 describe("LinksSection", () => {
-  it("esclarece o propósito de cada WhatsApp e preserva os hrefs", () => {
+  it("mantém os rótulos Claro/Vivo e preserva os hrefs", () => {
     render(<LinksSection />);
     const claro = screen.getByRole("link", {
-      name: "Vendas e orçamento (Claro)",
+      name: "Conversar no Whats (Claro)",
     });
     const vivo = screen.getByRole("link", {
-      name: "Oficina e peças (Vivo)",
+      name: "Conversar no Whats (Vivo)",
     });
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(
-      screen.queryByRole("link", { name: /Conversar no Whats/i }),
+      screen.queryByRole("link", { name: /Vendas e orçamento|Oficina e peças/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -32,7 +32,6 @@ describe("LinksSection", () => {
     expect(screen.getByText("Loja física")).toBeInTheDocument();
     expect(screen.getByText(store.address.display)).toBeInTheDocument();
     expect(screen.getByText(store.hours.display)).toBeInTheDocument();
-    expect(screen.getByText(store.hours.extraNote)).toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
   });

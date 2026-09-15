@@ -27,16 +27,16 @@ describe("links", () => {
     expect(u.searchParams.get("text")).toBe(SALES_MESSAGE_RITA);
   });
 
-  it("mantém dois atalhos de WhatsApp com propósito e os mesmos números", () => {
+  it("mantém dois atalhos de WhatsApp Claro/Vivo e os mesmos números", () => {
     expect(whatsappSalesLinks).toHaveLength(2);
     expect(whatsappSalesLinks[0]).toMatchObject({
       id: "claro",
-      label: "Vendas e orçamento (Claro)",
+      label: "Conversar no Whats (Claro)",
       phoneDigits: PHONE_CLARO,
     });
     expect(whatsappSalesLinks[1]).toMatchObject({
       id: "vivo",
-      label: "Oficina e peças (Vivo)",
+      label: "Conversar no Whats (Vivo)",
       phoneDigits: PHONE_VIVO,
     });
     whatsappSalesLinks.forEach((l) => {
@@ -58,13 +58,14 @@ describe("links", () => {
     ]);
   });
 
-  it("expõe endereço e horário da loja física sem inventar sábado", () => {
+  it("expõe endereço e horário confirmados pelo dono da loja", () => {
     expect(store.address.street).toBe("Rua Mário Stella, 355");
-    expect(store.address.display).toContain("Vila Nova");
-    expect(store.address.display).toContain("Fartura/SP");
-    expect(store.hours.display).toBe("Seg–Sex 8h–17h");
-    expect(store.hours.display.toLowerCase()).not.toMatch(/s[aá]b/);
-    expect(store.trustLine).toBe("Há 31 anos em Fartura");
+    expect(store.address.display).toBe("Rua Mário Stella, 355 · Fartura/SP");
+    expect(store.address.display).not.toMatch(/Vila Nova/i);
+    expect(store.hours.display).toBe("Seg–Sex 8h–18h · Sáb 8h–13h");
+    expect(store.hours.display).not.toMatch(/17h|12h/);
+    expect(store.trustLine).toBe("Há mais de 30 anos em Fartura");
+    expect(store).not.toHaveProperty("foundingDate");
   });
 
   it("formata telefones brasileiros para NAP", () => {
