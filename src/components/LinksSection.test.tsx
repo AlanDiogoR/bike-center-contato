@@ -34,6 +34,8 @@ describe("LinksSection", () => {
     expect(screen.getByText(store.hours.display)).toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
+    expect(maps.getAttribute("href")).toContain("destination=");
+    expect(maps.getAttribute("href")).toContain("Fartura");
   });
 
   it("não renderiza oferta no topo quando o slot está vazio", () => {

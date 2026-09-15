@@ -74,7 +74,7 @@ export const mercadoLivreLink = {
 
 export const googleMapsLink = {
   label: "Como chegar — Google Maps",
-  href: "https://maps.app.goo.gl/r3otm9rrYUj6jsMu7",
+  href: "https://www.google.com/maps/dir/?api=1&destination=Rua%20M%C3%A1rio%20Stella%2C%20355%2C%20Fartura%20-%20SP",
 } as const;
 
 export const socialLinks = [

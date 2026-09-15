@@ -59,7 +59,7 @@ O workflow em `.github/workflows/ci.yml` executa lint, testes e build em cada pu
 - `src/app/layout.tsx` — metadata, SEO, JSON-LD
 - `src/components/LinksSection.tsx` — botões e animações
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
-- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://maps.app.goo.gl/r3otm9rrYUj6jsMu7), redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
+- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=Rua%20M%C3%A1rio%20Stella%2C%20355%2C%20Fartura%20-%20SP) com destino fixo na loja, redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
 - `public/logo.png` — logo da loja (PNG com transparência)
 
 ## Licença

@@ -50,7 +50,16 @@ describe("links", () => {
     const ml = new URL(mercadoLivreLink.href);
     expect(ml.hostname).toBe("lista.mercadolivre.com.br");
     expect(ml.searchParams.get("seller_id")).toBe("569984748");
-    expect(googleMapsLink.href).toBe("https://maps.app.goo.gl/r3otm9rrYUj6jsMu7");
+    const maps = new URL(googleMapsLink.href);
+    expect(maps.hostname).toBe("www.google.com");
+    expect(maps.pathname).toBe("/maps/dir/");
+    expect(maps.searchParams.get("api")).toBe("1");
+    expect(maps.searchParams.get("destination")).toBe(
+      "Rua Mário Stella, 355, Fartura - SP",
+    );
+    expect(googleMapsLink.href).not.toContain("maps.app.goo.gl");
+    expect(googleMapsLink.href.toLowerCase()).not.toContain("procópio");
+    expect(googleMapsLink.href.toLowerCase()).not.toContain("procopio");
     expect(socialLinks.map((s) => s.id)).toEqual([
       "instagram",
       "tiktok",
