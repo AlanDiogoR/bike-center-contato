@@ -38,6 +38,10 @@ export const store = {
     saturdayOpens: "08:00",
     saturdayCloses: "13:00",
   },
+  geo: {
+    latitude: -23.3883268,
+    longitude: -49.5062797,
+  },
 } as const;
 
 export const whatsappSalesLinks = [
@@ -74,7 +78,12 @@ export const mercadoLivreLink = {
 
 export const googleMapsLink = {
   label: "Como chegar — Google Maps",
-  href: "https://www.google.com/maps/dir/?api=1&destination=Rua%20M%C3%A1rio%20Stella%2C%20355%2C%20Fartura%20-%20SP",
+  href: "https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797",
+} as const;
+
+export const googleMapsPlaceLink = {
+  label: "Bike Center Fartura no Google Maps",
+  href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z",
 } as const;
 
 export const socialLinks = [

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Logo } from "./Logo";
-import { googleMapsLink, store } from "@/lib/links";
+import { googleMapsPlaceLink, store } from "@/lib/links";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -39,6 +39,6 @@ describe("Logo", () => {
     render(<Logo />);
     expect(screen.getByText(store.tagline)).toBeInTheDocument();
     const trust = screen.getByRole("link", { name: store.trustLine });
-    expect(trust).toHaveAttribute("href", googleMapsLink.href);
+    expect(trust).toHaveAttribute("href", googleMapsPlaceLink.href);
   });
 });

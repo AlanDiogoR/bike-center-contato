@@ -6,6 +6,7 @@ import {
   buildWhatsAppHref,
   formatBrMobileDisplay,
   googleMapsLink,
+  googleMapsPlaceLink,
   highlightOffer,
   mercadoLivreLink,
   socialLinks,
@@ -54,12 +55,13 @@ describe("links", () => {
     expect(maps.hostname).toBe("www.google.com");
     expect(maps.pathname).toBe("/maps/dir/");
     expect(maps.searchParams.get("api")).toBe("1");
-    expect(maps.searchParams.get("destination")).toBe(
-      "Rua Mário Stella, 355, Fartura - SP",
-    );
+    expect(maps.searchParams.get("destination")).toBe("-23.3883268,-49.5062797");
     expect(googleMapsLink.href).not.toContain("maps.app.goo.gl");
+    expect(googleMapsLink.href).not.toContain("destination=Rua");
     expect(googleMapsLink.href.toLowerCase()).not.toContain("procópio");
     expect(googleMapsLink.href.toLowerCase()).not.toContain("procopio");
+    expect(googleMapsPlaceLink.href).toContain("Bike+Center+Fartura");
+    expect(googleMapsPlaceLink.href).toContain("-23.3883268,-49.5062797");
     expect(socialLinks.map((s) => s.id)).toEqual([
       "instagram",
       "tiktok",

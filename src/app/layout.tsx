@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
-import { googleMapsLink, store, whatsappSalesLinks } from "@/lib/links";
+import { googleMapsPlaceLink, store, whatsappSalesLinks } from "@/lib/links";
 import "./globals.css";
 
 const inter = Inter({
@@ -62,7 +62,12 @@ const jsonLd = {
       closes: store.hours.saturdayCloses,
     },
   ],
-  hasMap: googleMapsLink.href,
+  hasMap: googleMapsPlaceLink.href,
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: store.geo.latitude,
+    longitude: store.geo.longitude,
+  },
 };
 
 export const metadata: Metadata = {
