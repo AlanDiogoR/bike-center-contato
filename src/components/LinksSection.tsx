@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FaClock, FaExternalLinkAlt, FaMapMarkerAlt, FaUsers, FaWhatsapp } from "react-icons/fa";
+import {
+  FaClock,
+  FaExternalLinkAlt,
+  FaMapMarkerAlt,
+  FaStar,
+  FaUsers,
+  FaWhatsapp,
+} from "react-icons/fa";
 import {
   SiFacebook,
   SiGooglemaps,
@@ -11,6 +18,7 @@ import {
 } from "react-icons/si";
 import {
   googleMapsLink,
+  googleReviewLink,
   highlightOffer,
   mercadoLivreLink,
   socialLinks,
@@ -19,6 +27,7 @@ import {
   whatsappSalesLinks,
 } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
+import { ReviewCarousel } from "@/components/ReviewCarousel";
 
 const container = {
   hidden: { opacity: 0 },
@@ -214,6 +223,33 @@ export function LinksSection() {
 
         <motion.div variants={item}>
           <a
+            href={googleReviewLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackOutboundClick(
+                googleReviewLink.label,
+                googleReviewLink.href,
+                "review",
+              )
+            }
+            className="group flex items-center gap-4 rounded-xl border border-[#F9AB00]/40 bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-5 py-4 text-left font-semibold text-zinc-900 shadow-lg shadow-amber-950/30 transition-transform hover:-translate-y-0.5 hover:from-[#ffd34d] hover:to-[#ffc107] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBBC05]"
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/70">
+              <FaStar className="h-7 w-7 text-[#E37400]" aria-hidden />
+            </span>
+            <span className="flex-1 text-base leading-snug">
+              {googleReviewLink.label}
+            </span>
+            <FaExternalLinkAlt
+              className="h-5 w-5 shrink-0 text-zinc-700 opacity-80 transition group-hover:opacity-100"
+              aria-hidden
+            />
+          </a>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <a
             href={googleMapsLink.href}
             target="_blank"
             rel="noopener noreferrer"
@@ -243,6 +279,10 @@ export function LinksSection() {
           </a>
         </motion.div>
       </div>
+
+      <motion.div variants={item} className="mt-8">
+        <ReviewCarousel />
+      </motion.div>
 
       <motion.p
         variants={item}

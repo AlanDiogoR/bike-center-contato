@@ -7,6 +7,7 @@ import {
   formatBrMobileDisplay,
   googleMapsLink,
   googleMapsPlaceLink,
+  googleReviewLink,
   highlightOffer,
   mercadoLivreLink,
   socialLinks,
@@ -62,6 +63,12 @@ describe("links", () => {
     expect(googleMapsLink.href.toLowerCase()).not.toContain("procopio");
     expect(googleMapsPlaceLink.href).toContain("Bike+Center+Fartura");
     expect(googleMapsPlaceLink.href).toContain("-23.3883268,-49.5062797");
+    expect(googleReviewLink.label).toBe("Nos avalie no Google");
+    expect(googleReviewLink.href).toContain("Bike+Center+Fartura");
+    expect(googleReviewLink.href).toContain("-23.3883268,-49.5062797");
+    expect(googleReviewLink.href).toContain("!9m1!1b1");
+    expect(googleReviewLink.href).not.toContain("entry=ttu");
+    expect(googleReviewLink.href).not.toContain("g_ep=");
     expect(socialLinks.map((s) => s.id)).toEqual([
       "instagram",
       "tiktok",

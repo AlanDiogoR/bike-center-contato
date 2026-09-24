@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { LinksSection } from "./LinksSection";
 import {
   googleMapsLink,
+  googleReviewLink,
   store,
   whatsappSalesLinks,
 } from "@/lib/links";
@@ -36,6 +37,10 @@ describe("LinksSection", () => {
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
     expect(maps.getAttribute("href")).toContain("-49.5062797");
+    const review = screen.getByRole("link", { name: googleReviewLink.label });
+    expect(review).toHaveAttribute("href", googleReviewLink.href);
+    expect(review.getAttribute("href")).toContain("Bike+Center+Fartura");
+    expect(review.getAttribute("href")).toContain("!9m1!1b1");
   });
 
   it("não renderiza oferta no topo quando o slot está vazio", () => {
