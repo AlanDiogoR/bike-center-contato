@@ -1,6 +1,6 @@
 # Bike Center Fartura — Links
 
-Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Framer Motion**, focada em conversão para **WhatsApp**, tráfego para a loja no **Mercado Livre** e **localização no Google Maps**.
+Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Framer Motion**, focada em conversão para **WhatsApp**, tráfego para a loja no **Mercado Livre**, **localização no Google Maps** e **avaliações no Google**.
 
 ## Stack
 
@@ -57,9 +57,10 @@ O workflow em `.github/workflows/ci.yml` executa lint, testes e build em cada pu
 
 - `src/app/page.tsx` — landing
 - `src/app/layout.tsx` — metadata, SEO, JSON-LD
-- `src/components/LinksSection.tsx` — botões e animações
+- `src/components/LinksSection.tsx` — botões e animações (inclui **Nos avalie no Google**)
+- `src/components/ReviewCarousel.tsx` — carrossel estático do passo a passo (Instagram → site → Maps → avaliar)
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
-- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797) com destino nas coordenadas do pin oficial, redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
+- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797) com destino nas coordenadas do pin oficial, [avaliações no Google](https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y), redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
 - `public/logo.png` — logo da loja (PNG com transparência)
 
 ## Licença
