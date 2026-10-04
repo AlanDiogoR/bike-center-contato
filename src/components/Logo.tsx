@@ -15,7 +15,10 @@ export function Logo() {
           sizes="(max-width: 640px) 176px, 192px"
         />
       </div>
-      <p className="mt-4 max-w-sm text-center text-sm font-medium tracking-wide text-zinc-300">
+      <h1 className="mt-4 max-w-sm text-center text-base font-bold tracking-wide text-zinc-100">
+        Bike Center Fartura — motos e bicicletas em Fartura/SP
+      </h1>
+      <p className="mt-1 max-w-sm text-center text-sm font-medium tracking-wide text-zinc-300">
         {store.tagline}
       </p>
       <a
