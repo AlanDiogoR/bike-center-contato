@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
 import { googleMapsPlaceLink, store, whatsappSalesLinks } from "@/lib/links";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,15 +25,13 @@ const keywords = [
   "oficina de motos fartura",
 ];
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: store.name,
   description,
-  url: siteUrl,
+  url: `${siteUrl}/`,
+  image: `${siteUrl}/logo.png`,
   telephone: whatsappSalesLinks.map((link) => `+${link.phoneDigits}`),
   address: {
     "@type": "PostalAddress",

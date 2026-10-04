@@ -41,4 +41,11 @@ describe("Logo", () => {
     const trust = screen.getByRole("link", { name: store.trustLine });
     expect(trust).toHaveAttribute("href", googleMapsPlaceLink.href);
   });
+
+  it("tem exatamente um H1 visível com o nome da loja", () => {
+    render(<Logo />);
+    const h1 = screen.getAllByRole("heading", { level: 1 });
+    expect(h1).toHaveLength(1);
+    expect(h1[0]).toHaveTextContent(/Bike Center Fartura — motos e bicicletas em Fartura\/SP/);
+  });
 });
