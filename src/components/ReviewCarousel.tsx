@@ -23,7 +23,7 @@ const SLIDES = [
     id: "site",
     step: "2",
     title: "Toque em Avalie",
-    caption: "No site, toque no botão amarelo “Nos avalie no Google”.",
+    caption: "No site, toque no botão amarelo “Avalie a Bike Center no Google”.",
   },
   {
     id: "maps",
@@ -72,7 +72,7 @@ function StatusBar({ dark = false }: { dark?: boolean }) {
 function TapHint({ label }: { label: string }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center">
-      <span className="rounded-full bg-[#ec6e37] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-lg">
+      <span className="rounded-full bg-[#ec6e37] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-zinc-950 shadow-lg">
         {label}
       </span>
     </div>
@@ -90,7 +90,7 @@ function InstagramSlide() {
         </div>
         <div className="flex items-center gap-3 px-3">
           <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-[#F9AB00] to-[#ec6e37] p-[2px]">
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[8px] font-black leading-tight text-[#c95a2e]">
+            <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[8px] font-black leading-tight text-[#9a3412]">
               BC
             </div>
           </div>
@@ -121,7 +121,7 @@ function InstagramSlide() {
           <p className="text-[11px] font-bold text-[#00376b] underline">
             Nosso site — toque aqui
           </p>
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-white shadow">
+          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
             1
           </div>
         </div>
@@ -153,22 +153,22 @@ function SiteSlide() {
           </p>
         </div>
         <div className="mt-2 flex flex-col gap-1.5 px-3">
-          <div className="flex items-center gap-2 rounded-lg bg-[#25D366] px-2 py-1.5 text-[9px] font-semibold">
+          <div className="relative rounded-lg border-2 border-white bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-2 py-2 text-[10px] font-bold text-zinc-950 shadow-lg shadow-amber-500/40">
+            <span className="flex items-center gap-2">
+              <FaStar className="h-3.5 w-3.5 text-[#E37400]" aria-hidden />
+              Avalie a Bike Center no Google
+            </span>
+            <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
+              2
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg bg-[#25D366] px-2 py-1.5 text-[9px] font-semibold text-zinc-950">
             <FaWhatsapp className="h-3 w-3" aria-hidden />
             Conversar no Whats
           </div>
           <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FFE600] to-[#FFF4A3] px-2 py-1.5 text-[9px] font-semibold text-[#2B4D9E]">
             <SiMercadopago className="h-3 w-3" aria-hidden />
             Loja no Mercado Livre
-          </div>
-          <div className="relative rounded-lg border-2 border-white bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-2 py-2 text-[10px] font-bold text-zinc-900 shadow-lg shadow-amber-500/40">
-            <span className="flex items-center gap-2">
-              <FaStar className="h-3.5 w-3.5 text-[#E37400]" aria-hidden />
-              Nos avalie no Google
-            </span>
-            <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-white shadow">
-              2
-            </div>
           </div>
           <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/80 px-2 py-1.5 text-[9px] font-semibold text-zinc-100">
             <SiGooglemaps className="h-3 w-3 text-[#4285F4]" aria-hidden />
@@ -208,7 +208,7 @@ function MapsSlide() {
             <span className="text-zinc-500">Visão geral</span>
             <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1a73e8]">
               Avaliações
-              <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ec6e37] text-[9px] font-black text-white">
+              <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ec6e37] text-[9px] font-black text-zinc-950">
                 3
               </span>
             </span>
@@ -238,7 +238,7 @@ function WriteReviewSlide() {
           <p className="mt-1 text-[9px] text-zinc-600">
             Conte como foi sua visita à loja.
           </p>
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-white shadow">
+          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
             4
           </div>
         </div>
@@ -284,7 +284,7 @@ function PublishSlide() {
         </div>
         <div className="relative mx-3 mt-4 rounded-full bg-[#1a73e8] py-2 text-center text-[11px] font-bold text-white shadow">
           Publicar
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-white shadow">
+          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
             5
           </div>
         </div>
@@ -330,7 +330,7 @@ export function ReviewCarousel() {
       aria-label="Passo a passo para avaliar no Google"
       className="mx-auto w-full max-w-md pb-2"
     >
-      <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+      <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300">
         Como nos avaliar
       </p>
 
@@ -369,25 +369,6 @@ export function ReviewCarousel() {
           >
             <FaChevronLeft className="h-4 w-4" aria-hidden />
           </button>
-
-          <div className="flex items-center gap-1.5" role="tablist" aria-label="Slides">
-            {SLIDES.map((item, i) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={i === index}
-                aria-label={`Ir para o passo ${item.step}: ${item.title}`}
-                onClick={() => go(i)}
-                className={`h-2.5 rounded-full transition ${
-                  i === index
-                    ? "w-6 bg-[#ec6e37]"
-                    : "w-2.5 bg-zinc-600 hover:bg-zinc-400"
-                }`}
-              />
-            ))}
-          </div>
-
           <button
             type="button"
             onClick={() => go(index + 1)}
@@ -396,6 +377,30 @@ export function ReviewCarousel() {
           >
             <FaChevronRight className="h-4 w-4" aria-hidden />
           </button>
+        </div>
+
+        <div
+          className="mt-2 flex flex-wrap items-center justify-center"
+          role="tablist"
+          aria-label="Slides"
+        >
+          {SLIDES.map((item, i) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              aria-label={`Ir para o passo ${item.step}: ${item.title}`}
+              onClick={() => go(i)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              <span
+                className={`h-2.5 rounded-full ${
+                  i === index ? "w-6 bg-[#ec6e37]" : "w-2.5 bg-zinc-400"
+                }`}
+              />
+            </button>
+          ))}
         </div>
 
         {index === last ? (

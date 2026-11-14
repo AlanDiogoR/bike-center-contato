@@ -38,6 +38,8 @@ export const store = {
     saturdayOpens: "08:00",
     saturdayCloses: "13:00",
   },
+  citation:
+    "A Bike Center Fartura vende motos, bicicletas, acessórios e peças e tem oficina de motos em Fartura/SP, na Rua Mário Stella, 355, CEP 18870-000. Atende de segunda a sexta, das 8h às 18h, e aos sábados, das 8h às 13h. WhatsApp: (14) 99166-7793 e (14) 99632-5919.",
   geo: {
     latitude: -23.3883268,
     longitude: -49.5062797,
@@ -89,6 +91,7 @@ export const googleMapsPlaceLink = {
 /** Avaliações oficiais da ficha no Google Maps (`!9m1!1b1` abre a aba de reviews). */
 export const googleReviewLink = {
   label: "Nos avalie no Google",
+  prominentLabel: "Avalie a Bike Center no Google",
   href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y",
 } as const;
 

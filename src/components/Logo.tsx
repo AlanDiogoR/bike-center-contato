@@ -15,14 +15,17 @@ export function Logo() {
           sizes="(max-width: 640px) 176px, 192px"
         />
       </div>
-      <p className="mt-4 max-w-sm text-center text-sm font-medium tracking-wide text-zinc-300">
+      <h1 className="mt-4 max-w-sm text-center text-base font-bold tracking-wide text-zinc-100">
+        Bike Center Fartura — motos e bicicletas em Fartura/SP
+      </h1>
+      <p className="mt-1 max-w-sm text-center text-sm font-medium tracking-wide text-zinc-300">
         {store.tagline}
       </p>
       <a
         href={googleMapsPlaceLink.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-1.5 text-center text-sm font-semibold text-[#ec6e37] underline-offset-4 transition hover:text-[#ff8a55] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ec6e37]"
+        className="mt-1.5 inline-flex min-h-11 items-center text-center text-sm font-semibold text-[#ff8a55] underline-offset-4 transition hover:text-[#ffb088] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8a55]"
       >
         {store.trustLine}
       </a>
