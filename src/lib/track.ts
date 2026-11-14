@@ -1,3 +1,5 @@
+import { parseNormalizedSearch } from "@/lib/query";
+
 export type OutboundCategory =
   | "whatsapp"
   | "mercado_livre"
@@ -16,12 +18,10 @@ const UTM_KEYS = [
 ] as const;
 
 export function readCampaignUtms(search: string): Record<string, string> {
-  const params = new URLSearchParams(
-    search.startsWith("?") ? search.slice(1) : search,
-  );
+  const params = parseNormalizedSearch(search);
   const utms: Record<string, string> = {};
   for (const key of UTM_KEYS) {
-    const value = params.get(key);
+    const value = params[key];
     if (value) utms[key] = value;
   }
   return utms;
