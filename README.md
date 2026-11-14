@@ -13,9 +13,9 @@ Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Fra
 
 ## Ícones
 
-Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaUsers`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
+Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
 
-A logo usa **`public/logo.png`** (fundo transparente) com **`next/image`**, dentro de um **badge circular** só com borda na cor da marca (**`#ec6e37`**), sem fundo branco.
+A logo usa **`public/logo.png`** (fundo transparente) com **`next/image`**, dentro de um **badge circular** branco com anel **`#9a3412`**.
 
 O conjunto **Simple Icons** não inclui o logotipo oficial do Mercado Livre; o botão da loja usa **`SiMercadopago`** (mesmo ecossistema Mercado) com cor **#3483FA** sobre o fundo amarelo do card, alinhado à identidade visual do marketplace.
 
@@ -64,10 +64,10 @@ Sem esse parâmetro, a página permanece a de hoje. A troca é feita no HTML est
 - `src/app/page.tsx` — landing
 - `src/app/layout.tsx` — metadata, SEO, JSON-LD
 - `src/components/LinksSection.tsx` — botões e animações (inclui **Nos avalie no Google** e o CTA da placa)
-- `src/components/ReviewCarousel.tsx` — carrossel estático do passo a passo (Instagram → site → Maps → avaliar)
+- `src/components/ReviewCarousel.tsx` — carrossel estático do passo a passo (site → Maps → escrever → publicar)
 - `src/lib/query.ts` — normalização das chaves de UTM (`trim`, minúsculas, sem espaços ou `%20`)
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
-- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, [grupo de novidades](https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp), Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797) com destino nas coordenadas do pin oficial, [avaliações no Google](https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y), redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
+- `src/lib/links.ts` — URLs (WhatsApp Claro/Vivo, Mercado Livre, [Google Maps](https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797) com destino nas coordenadas do pin oficial, [avaliações no Google](https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y), redes), NAP da loja física (Rua Mário Stella, 355 · Fartura/SP · Seg–Sex 8h–18h · Sáb 8h–13h), slot opcional de oferta e mensagem padrão do WhatsApp (consultora Rita)
 - `public/logo.png` — logo da loja (PNG com transparência)
 
 ## Licença

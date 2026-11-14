@@ -7,7 +7,6 @@ import {
   FaMapMarkerAlt,
   FaQrcode,
   FaStar,
-  FaUsers,
   FaWhatsapp,
 } from "react-icons/fa";
 import {
@@ -25,7 +24,6 @@ import {
   mercadoLivreLink,
   socialLinks,
   store,
-  whatsappGroupLink,
   whatsappSalesLinks,
 } from "@/lib/links";
 import { PIX_BUTTON_LABEL } from "@/lib/pix";
@@ -94,13 +92,14 @@ export function LinksSection() {
               "review",
             )
           }
-          className={`animate-pulse-review motion-reduce:animate-none flex min-h-16 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left text-lg font-bold text-ink ring-2 ring-sunset ${focusRing}`}
+          aria-label={googleReviewLink.prominentLabel}
+          className={`animate-pulse-review motion-reduce:animate-none flex min-h-16 w-full min-w-0 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left text-lg font-bold text-ink ring-2 ring-sunset ${focusRing}`}
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
             <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
           </span>
-          <span className="flex-1 leading-snug">
-            {googleReviewLink.prominentLabel}
+          <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
+            Avalie no Google
           </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
         </a>
@@ -163,26 +162,6 @@ export function LinksSection() {
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
           </a>
         ))}
-
-        <a
-          href={whatsappGroupLink.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() =>
-            trackOutboundClick(
-              whatsappGroupLink.label,
-              whatsappGroupLink.href,
-              "whatsapp",
-            )
-          }
-          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-pine bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pine/10">
-            <FaUsers className="h-6 w-6 text-pine" aria-hidden />
-          </span>
-          <span className="flex-1 leading-snug">{whatsappGroupLink.label}</span>
-          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-        </a>
 
         <a
           href={mercadoLivreLink.href}

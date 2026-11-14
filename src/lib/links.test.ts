@@ -12,7 +12,6 @@ import {
   mercadoLivreLink,
   socialLinks,
   store,
-  whatsappGroupLink,
   whatsappSalesLinks,
 } from "./links";
 
@@ -47,8 +46,11 @@ describe("links", () => {
     });
   });
 
-  it("expõe grupo do WhatsApp, Mercado Livre, Google Maps e redes sociais", () => {
-    expect(whatsappGroupLink.href).toContain("chat.whatsapp.com");
+  it("não publica convite de grupo e mantém Mercado Livre, Google Maps e redes", async () => {
+    const linksModule = await import("./links");
+    expect(linksModule).not.toHaveProperty("whatsappGroupLink");
+    expect(JSON.stringify(linksModule)).not.toContain("chat.whatsapp.com");
+    expect(JSON.stringify(linksModule)).not.toContain("whatsapp.com/channel");
     const ml = new URL(mercadoLivreLink.href);
     expect(ml.hostname).toBe("lista.mercadolivre.com.br");
     expect(ml.searchParams.get("seller_id")).toBe("569984748");

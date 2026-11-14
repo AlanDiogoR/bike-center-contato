@@ -49,6 +49,10 @@ describe("LinksSection", () => {
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(
+      screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
+    ).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain("chat.whatsapp.com");
+    expect(
       screen.queryByRole("link", { name: /Vendas e orçamento|Oficina e peças/i }),
     ).not.toBeInTheDocument();
   });
@@ -74,6 +78,10 @@ describe("LinksSection", () => {
     render(<LinksSection />);
     const links = screen.getAllByRole("link");
     expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
+    expect(links[0]).toHaveTextContent("Avalie no Google");
+    expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "Avalie no Google",
+    );
     expect(links[0]).toHaveAttribute("href", googleReviewLink.href);
     expect(links[0].className).toMatch(/animate-pulse-review/);
     expect(links[0].className).toMatch(/motion-reduce:animate-none/);
@@ -129,9 +137,11 @@ describe("LinksSection", () => {
     expect(parked).not.toBeVisible();
     expect(parked).toHaveAttribute("href", googleReviewLink.href);
     expect(parked).toHaveTextContent(PLACA_CTA);
+    expect(review).toHaveTextContent("Avalie no Google");
     expect(screen.getByText("Como nos avaliar")).toBeVisible();
-    expect(screen.getByText("Passo 1 de 5")).toBeVisible();
-    expect(screen.getByText("Abra o Instagram")).toBeVisible();
+    expect(screen.getByText("Passo 1 de 4")).toBeVisible();
+    expect(screen.getByText("Toque em Avalie")).toBeVisible();
+    expect(screen.queryByText("Abra o Instagram")).not.toBeInTheDocument();
     expect(
       screen.getByRole("region", {
         name: "Passo a passo para avaliar no Google",
@@ -160,8 +170,8 @@ describe("LinksSection", () => {
       screen.queryByRole("link", { name: googleReviewLink.prominentLabel }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Como nos avaliar")).not.toBeVisible();
-    expect(screen.getByText("Passo 1 de 5")).not.toBeVisible();
-    expect(screen.getByText("Abra o Instagram")).not.toBeVisible();
+    expect(screen.getByText("Passo 1 de 4")).not.toBeVisible();
+    expect(screen.getByText("Toque em Avalie")).not.toBeVisible();
     expect(
       screen.queryByRole("region", {
         name: "Passo a passo para avaliar no Google",
@@ -170,7 +180,11 @@ describe("LinksSection", () => {
 
     const original = document.querySelector('a[data-placa="hide"]');
     expect(original).not.toBeVisible();
-    expect(original).toHaveTextContent(googleReviewLink.prominentLabel);
+    expect(original).toHaveTextContent("Avalie no Google");
+    expect(original).toHaveAttribute(
+      "aria-label",
+      googleReviewLink.prominentLabel,
+    );
     expect(original).toHaveAttribute("href", cta.getAttribute("href"));
     expect(
       screen.getByRole("link", { name: "Conversar no Whats (Claro)" }),
