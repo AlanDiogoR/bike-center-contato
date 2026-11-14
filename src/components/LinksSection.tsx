@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion } from "framer-motion";
 import {
   FaClock,
   FaExternalLinkAlt,
@@ -33,49 +32,18 @@ import { PIX_BUTTON_LABEL } from "@/lib/pix";
 import { trackOutboundClick } from "@/lib/track";
 import { ReviewCarousel } from "@/components/ReviewCarousel";
 
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0 },
-};
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
 function SocialIcon({ kind }: { kind: (typeof socialLinks)[number]["icon"] }) {
   const className = "h-6 w-6 shrink-0";
   switch (kind) {
     case "instagram":
-      return (
-        <SiInstagram
-          className={className}
-          style={{
-            color: "#E4405F",
-            filter: "drop-shadow(0 0 1px rgba(255,255,255,0.15))",
-          }}
-          aria-hidden
-        />
-      );
+      return <SiInstagram className={className} style={{ color: "#C13584" }} aria-hidden />;
     case "tiktok":
-      return (
-        <span className="relative inline-flex h-6 w-6 items-center justify-center">
-          <SiTiktok
-            className="h-6 w-6"
-            style={{
-              color: "#25F4EE",
-              filter: "drop-shadow(0 1px 0 #EE1D52)",
-            }}
-            aria-hidden
-          />
-        </span>
-      );
+      return <SiTiktok className={className} style={{ color: "#171516" }} aria-hidden />;
     case "facebook":
-      return (
-        <SiFacebook className={className} style={{ color: "#1877F2" }} aria-hidden />
-      );
+      return <SiFacebook className={className} style={{ color: "#1877F2" }} aria-hidden />;
     default:
       return null;
   }
@@ -96,10 +64,10 @@ function PixButton() {
           trackOutboundClick(PIX_BUTTON_LABEL, "modal:pix", "pix");
           setOpen(true);
         }}
-        className="group flex min-h-14 w-full items-center gap-4 rounded-xl border-2 border-[#32BCAD] bg-white px-5 py-4 text-left text-base font-bold text-zinc-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-zinc-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#32BCAD]"
+        className={`group flex min-h-14 w-full items-center gap-4 rounded-2xl border-2 border-sunset bg-white px-5 py-4 text-left text-base font-bold text-ink shadow-sm ${focusRing}`}
       >
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#32BCAD]/20">
-          <FaQrcode className="h-7 w-7 text-zinc-950" aria-hidden />
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sunset/15">
+          <FaQrcode className="h-7 w-7 text-ink" aria-hidden />
         </span>
         <span className="flex-1 leading-snug">{PIX_BUTTON_LABEL}</span>
       </button>
@@ -112,240 +80,171 @@ function PixButton() {
 
 export function LinksSection() {
   return (
-    <motion.div
-      className="mx-auto w-full max-w-md px-4 pb-16 pt-2"
-      variants={container}
-      initial="hidden"
-      animate="show"
-    >
-      <div className="flex flex-col gap-4">
-        <div>
-          <a
-            href={googleReviewLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackOutboundClick(
-                googleReviewLink.prominentLabel,
-                googleReviewLink.href,
-                "review",
-              )
-            }
-            className="group flex min-h-16 items-center gap-4 rounded-2xl bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-5 py-5 text-left text-lg font-bold text-zinc-950 shadow-xl shadow-amber-950/40 ring-2 ring-white/80 transition hover:-translate-y-0.5 hover:from-[#ffd34d] hover:to-[#ffc107] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/80">
-              <FaStar className="h-7 w-7 text-[#E37400]" aria-hidden />
-            </span>
-            <span className="flex-1 leading-snug">
-              {googleReviewLink.prominentLabel}
-            </span>
-            <FaExternalLinkAlt
-              className="h-5 w-5 shrink-0 text-zinc-800"
-              aria-hidden
-            />
-          </a>
-        </div>
+    <div className="mx-auto w-full max-w-md px-1 pb-10 pt-2">
+      <div className="flex flex-col gap-3">
+        <a
+          href={googleReviewLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() =>
+            trackOutboundClick(
+              googleReviewLink.prominentLabel,
+              googleReviewLink.href,
+              "review",
+            )
+          }
+          className={`animate-pulse-review motion-reduce:animate-none flex min-h-16 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left text-lg font-bold text-ink ring-2 ring-sunset ${focusRing}`}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
+            <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
+          </span>
+          <span className="flex-1 leading-snug">
+            {googleReviewLink.prominentLabel}
+          </span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
+        </a>
 
         <PixButton />
 
         {highlightOffer.enabled ? (
-          <motion.div variants={item}>
-            <a
-              href={highlightOffer.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackOutboundClick(
-                  highlightOffer.label,
-                  highlightOffer.href,
-                  "highlight",
-                )
-              }
-              className="group relative flex min-h-11 items-center gap-4 overflow-hidden rounded-xl bg-[#ec6e37] px-5 py-4 text-left font-semibold text-zinc-950 shadow-lg shadow-orange-950/40 transition-transform hover:-translate-y-0.5 hover:bg-[#f07d4a] hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80"
-            >
-              <span className="flex-1 text-base leading-snug">
-                {highlightOffer.label}
-              </span>
-              <FaExternalLinkAlt
-                className="h-5 w-5 shrink-0 opacity-80 transition group-hover:opacity-100"
-                aria-hidden
-              />
-            </a>
-          </motion.div>
+          <a
+            href={highlightOffer.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() =>
+              trackOutboundClick(
+                highlightOffer.label,
+                highlightOffer.href,
+                "highlight",
+              )
+            }
+            className={`flex min-h-14 items-center gap-4 rounded-2xl bg-sunset px-5 py-4 text-left text-base font-bold text-ink ${focusRing}`}
+          >
+            <span className="flex-1 leading-snug">{highlightOffer.label}</span>
+            <FaExternalLinkAlt className="h-5 w-5 shrink-0" aria-hidden />
+          </a>
         ) : null}
 
         {whatsappSalesLinks.map((link) => (
-          <motion.div key={link.id} variants={item}>
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackOutboundClick(link.label, link.href, "whatsapp")
-              }
-              className="group relative flex min-h-11 items-center gap-4 overflow-hidden rounded-xl bg-[#25D366] px-5 py-4 text-left font-semibold text-zinc-950 shadow-lg shadow-emerald-950/30 transition-transform animate-pulse-soft hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-950/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black/10">
-                <FaWhatsapp className="h-7 w-7 text-zinc-950" aria-hidden />
-              </span>
-              <span className="flex-1 text-base leading-snug">{link.label}</span>
-              <FaExternalLinkAlt
-                className="h-5 w-5 shrink-0 opacity-80 transition group-hover:opacity-100"
-                aria-hidden
-              />
-            </a>
-          </motion.div>
+          <a
+            key={link.id}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackOutboundClick(link.label, link.href, "whatsapp")}
+            className={`flex min-h-14 items-center gap-4 rounded-2xl bg-pine px-5 py-4 text-left text-base font-semibold text-white ${focusRing}`}
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              <FaWhatsapp className="h-7 w-7 text-white" aria-hidden />
+            </span>
+            <span className="flex-1 leading-snug">{link.label}</span>
+            <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
+          </a>
         ))}
 
-        <motion.div variants={item}>
-          <a
-            href={whatsappGroupLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackOutboundClick(
-                whatsappGroupLink.label,
-                whatsappGroupLink.href,
-                "whatsapp",
-              )
-            }
-            className="group flex min-h-11 items-center gap-4 overflow-hidden rounded-xl border border-black/10 bg-[#1fa855] px-5 py-4 text-left font-semibold text-zinc-950 shadow-md transition hover:-translate-y-0.5 hover:bg-[#25D366] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-950"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-black/10">
-              <FaUsers className="h-6 w-6 text-zinc-950" aria-hidden />
-            </span>
-            <span className="flex-1 text-base leading-snug">
-              {whatsappGroupLink.label}
-            </span>
-            <FaExternalLinkAlt
-              className="h-5 w-5 shrink-0 opacity-80 transition group-hover:opacity-100"
-              aria-hidden
-            />
-          </a>
-        </motion.div>
+        <a
+          href={whatsappGroupLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() =>
+            trackOutboundClick(
+              whatsappGroupLink.label,
+              whatsappGroupLink.href,
+              "whatsapp",
+            )
+          }
+          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-pine bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pine/10">
+            <FaUsers className="h-6 w-6 text-pine" aria-hidden />
+          </span>
+          <span className="flex-1 leading-snug">{whatsappGroupLink.label}</span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+        </a>
 
-        <motion.div variants={item}>
-          <a
-            href={mercadoLivreLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackOutboundClick(
-                mercadoLivreLink.label,
-                mercadoLivreLink.href,
-                "mercado_livre",
-              )
-            }
-            className="group flex min-h-11 items-center gap-4 rounded-xl border border-[#3483FA]/30 bg-gradient-to-r from-[#FFE600] to-[#FFF4A3] px-5 py-4 text-left font-semibold text-[#2B4D9E] shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3483FA]"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/60">
-              <SiMercadopago
-                className="h-9 w-9"
-                style={{ color: "#3483FA" }}
-                aria-hidden
-              />
-            </span>
-            <span className="flex-1 text-base leading-snug text-[#2B4D9E]">
-              {mercadoLivreLink.label}
-            </span>
-            <FaExternalLinkAlt
-              className="h-5 w-5 shrink-0 text-[#3483FA] opacity-90"
-              aria-hidden
-            />
-          </a>
-        </motion.div>
+        <a
+          href={mercadoLivreLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() =>
+            trackOutboundClick(
+              mercadoLivreLink.label,
+              mercadoLivreLink.href,
+              "mercado_livre",
+            )
+          }
+          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-[#ead7b8] bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-paper">
+            <SiMercadopago className="h-8 w-8" style={{ color: "#3483FA" }} aria-hidden />
+          </span>
+          <span className="flex-1 leading-snug">{mercadoLivreLink.label}</span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+        </a>
 
-        <motion.section
-          variants={item}
+        <section
           aria-labelledby="loja-fisica-heading"
-          className="rounded-xl border border-[#ec6e37]/25 bg-zinc-900/80 px-5 py-4 shadow-md"
+          className="rounded-2xl border border-[#ead7b8] bg-white px-5 py-4"
         >
           <h2
             id="loja-fisica-heading"
-            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#ec6e37]"
+            className="font-display text-sm uppercase tracking-[0.16em] text-[#9a3412]"
           >
             Loja física
           </h2>
-          <p className="mt-3 flex items-start gap-3 text-sm font-medium leading-snug text-zinc-100">
-            <FaMapMarkerAlt
-              className="mt-0.5 h-4 w-4 shrink-0 text-[#ec6e37]"
-              aria-hidden
-            />
+          <p className="mt-3 flex items-start gap-3 text-base font-medium leading-snug text-ink">
+            <FaMapMarkerAlt className="mt-1 h-4 w-4 shrink-0 text-[#9a3412]" aria-hidden />
             <span>{store.address.display}</span>
           </p>
-          <p className="mt-2.5 flex items-start gap-3 text-sm font-medium leading-snug text-zinc-100">
-            <FaClock
-              className="mt-0.5 h-4 w-4 shrink-0 text-zinc-300"
-              aria-hidden
-            />
+          <p className="mt-2.5 flex items-start gap-3 text-base font-medium leading-snug text-ink">
+            <FaClock className="mt-1 h-4 w-4 shrink-0 text-muted" aria-hidden />
             <span>{store.hours.display}</span>
           </p>
-        </motion.section>
+        </section>
 
-        <motion.div variants={item}>
-          <a
-            href={googleMapsLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackOutboundClick(
-                googleMapsLink.label,
-                googleMapsLink.href,
-                "maps",
-              )
-            }
-            className="group flex min-h-11 items-center gap-4 rounded-xl border border-zinc-700 bg-zinc-900/80 px-5 py-4 text-left font-semibold text-zinc-100 shadow-md transition hover:-translate-y-0.5 hover:border-[#4285F4]/50 hover:bg-zinc-800/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4285F4]"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-800">
-              <SiGooglemaps
-                className="h-8 w-8"
-                style={{ color: "#4285F4" }}
-                aria-hidden
-              />
-            </span>
-            <span className="flex-1 text-base leading-snug">
-              {googleMapsLink.label}
-            </span>
-            <FaExternalLinkAlt
-              className="h-5 w-5 shrink-0 text-zinc-400 transition group-hover:text-zinc-200"
-              aria-hidden
-            />
-          </a>
-        </motion.div>
+        <a
+          href={googleMapsLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() =>
+            trackOutboundClick(googleMapsLink.label, googleMapsLink.href, "maps")
+          }
+          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-[#ead7b8] bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-paper">
+            <SiGooglemaps className="h-8 w-8" style={{ color: "#1a73e8" }} aria-hidden />
+          </span>
+          <span className="flex-1 leading-snug">{googleMapsLink.label}</span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+        </a>
       </div>
 
-      <motion.div variants={item} className="mt-8">
+      <div className="mt-8">
         <ReviewCarousel />
-      </motion.div>
+      </div>
 
-      <motion.p
-        variants={item}
-        className="mt-10 mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300"
-      >
+      <p className="mb-3 mt-10 text-center font-display text-sm uppercase tracking-[0.18em] text-muted">
         Redes sociais
-      </motion.p>
+      </p>
 
       <div className="grid grid-cols-3 gap-3">
         {socialLinks.map((link) => (
-          <motion.div key={link.id} variants={item}>
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${link.shortLabel}. ${link.label}`}
-              onClick={() =>
-                trackOutboundClick(link.label, link.href, "social")
-              }
-              className="group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900/60 px-2 py-3 text-center text-zinc-100 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-zinc-600 hover:bg-zinc-800/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
-            >
-              <SocialIcon kind={link.icon} />
-              <span className="text-[11px] font-medium leading-tight text-zinc-300">
-                {link.shortLabel}
-              </span>
-            </a>
-          </motion.div>
+          <a
+            key={link.id}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${link.shortLabel}. ${link.label}`}
+            onClick={() => trackOutboundClick(link.label, link.href, "social")}
+            className={`flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#ead7b8] bg-white px-2 py-3 text-center text-ink ${focusRing}`}
+          >
+            <SocialIcon kind={link.icon} />
+            <span className="text-xs font-semibold leading-tight text-ink">
+              {link.shortLabel}
+            </span>
+          </a>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

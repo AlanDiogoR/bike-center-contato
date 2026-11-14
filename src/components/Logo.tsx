@@ -4,28 +4,29 @@ import { googleMapsPlaceLink, store } from "@/lib/links";
 export function Logo() {
   return (
     <div className="mb-2 flex flex-col items-center">
-      <div className="flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-full p-2 ring-2 ring-[#ec6e37]/40 shadow-xl sm:h-48 sm:w-48">
+      <div className="flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1.5 shadow-lg ring-4 ring-sun sm:h-44 sm:w-44">
         <Image
           src="/logo.png"
           alt="Bike Center Fartura — motos e bicicletas"
-          width={220}
-          height={220}
+          width={176}
+          height={176}
           priority
+          quality={60}
           className="h-full w-full object-contain"
-          sizes="(max-width: 640px) 176px, 192px"
+          sizes="176px"
         />
       </div>
-      <h1 className="mt-4 max-w-sm text-center text-base font-bold tracking-wide text-zinc-100">
+      <h1 className="mt-4 max-w-sm text-center font-display text-[1.7rem] font-semibold leading-tight tracking-wide text-ink">
         Bike Center Fartura — motos e bicicletas em Fartura/SP
       </h1>
-      <p className="mt-1 max-w-sm text-center text-sm font-medium tracking-wide text-zinc-300">
+      <p className="mt-2 max-w-sm text-center text-base font-medium leading-snug text-muted">
         {store.tagline}
       </p>
       <a
         href={googleMapsPlaceLink.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-1.5 inline-flex min-h-11 items-center text-center text-sm font-semibold text-[#ff8a55] underline-offset-4 transition hover:text-[#ffb088] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8a55]"
+        className="mt-1 inline-flex min-h-11 items-center text-center text-base font-semibold text-[#9a3412] underline-offset-4 transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sunset"
       >
         {store.trustLine}
       </a>

@@ -330,12 +330,12 @@ export function ReviewCarousel() {
       aria-label="Passo a passo para avaliar no Google"
       className="mx-auto w-full max-w-md pb-2"
     >
-      <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300">
+      <p className="mb-3 text-center font-display text-sm uppercase tracking-[0.18em] text-muted">
         Como nos avaliar
       </p>
 
       <div
-        className="relative overflow-hidden rounded-2xl border border-zinc-700/80 bg-zinc-900/70 p-4 shadow-xl"
+        className="relative overflow-hidden rounded-2xl border border-[#ead7b8] bg-white p-4 shadow-sm"
         onTouchStart={(event) => setTouchX(event.touches[0].clientX)}
         onTouchEnd={(event) => {
           if (touchX == null) return;
@@ -345,10 +345,10 @@ export function ReviewCarousel() {
           setTouchX(null);
         }}
       >
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#ec6e37]">
+        <p className="text-center font-display text-xs uppercase tracking-[0.16em] text-[#9a3412]">
           Passo {slide.step} de {SLIDES.length}
         </p>
-        <h2 className="mt-1 text-center text-lg font-bold text-zinc-50">
+        <h2 className="mt-1 text-center font-display text-2xl uppercase leading-none text-ink">
           {slide.title}
         </h2>
 
@@ -356,7 +356,7 @@ export function ReviewCarousel() {
           <SlideMockup id={slide.id} />
         </div>
 
-        <p className="mx-auto mt-4 max-w-xs text-center text-sm leading-snug text-zinc-300">
+        <p className="mx-auto mt-4 max-w-xs text-center text-base leading-snug text-muted">
           {slide.caption}
         </p>
 
@@ -364,7 +364,7 @@ export function ReviewCarousel() {
           <button
             type="button"
             onClick={() => go(index - 1)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-600 bg-zinc-800 text-zinc-100 transition hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#ead7b8] bg-paper text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             aria-label="Slide anterior"
           >
             <FaChevronLeft className="h-4 w-4" aria-hidden />
@@ -372,7 +372,7 @@ export function ReviewCarousel() {
           <button
             type="button"
             onClick={() => go(index + 1)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-zinc-600 bg-zinc-800 text-zinc-100 transition hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#ead7b8] bg-paper text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             aria-label="Próximo slide"
           >
             <FaChevronRight className="h-4 w-4" aria-hidden />
@@ -392,11 +392,11 @@ export function ReviewCarousel() {
               aria-selected={i === index}
               aria-label={`Ir para o passo ${item.step}: ${item.title}`}
               onClick={() => go(i)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               <span
                 className={`h-2.5 rounded-full ${
-                  i === index ? "w-6 bg-[#ec6e37]" : "w-2.5 bg-zinc-400"
+                  i === index ? "w-6 bg-[#9a3412]" : "w-2.5 bg-[#8a6a48]"
                 }`}
               />
             </button>
@@ -415,7 +415,7 @@ export function ReviewCarousel() {
                 "review",
               )
             }
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-4 py-3 text-sm font-bold text-zinc-900 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FBBC05]"
+            className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-sun px-4 py-3 text-base font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           >
             Avaliar agora no Google
             <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden />

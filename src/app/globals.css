@@ -3,9 +3,15 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   @apply min-h-screen antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-review {
+    animation: none;
+  }
 }

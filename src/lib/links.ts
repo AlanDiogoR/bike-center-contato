@@ -27,9 +27,9 @@ export const store = {
     city: "Fartura",
     state: "SP",
     country: "BR",
-    postalCode: "18870-000",
+    postalCode: "18870-712",
     display: "Rua Mário Stella, 355 · Fartura/SP",
-    napDisplay: "Rua Mário Stella, 355 — CEP 18870-000 — Fartura/SP",
+    napDisplay: "Rua Mário Stella, 355 — CEP 18870-712 — Fartura/SP",
   },
   hours: {
     display: "Seg–Sex 8h–18h · Sáb 8h–13h",
@@ -39,7 +39,7 @@ export const store = {
     saturdayCloses: "13:00",
   },
   citation:
-    "A Bike Center Fartura vende motos, bicicletas, acessórios e peças e tem oficina de motos em Fartura/SP, na Rua Mário Stella, 355, CEP 18870-000. Atende de segunda a sexta, das 8h às 18h, e aos sábados, das 8h às 13h. WhatsApp: (14) 99166-7793 e (14) 99632-5919.",
+    "A Bike Center Fartura vende motos, bicicletas, acessórios e peças e tem oficina de motos em Fartura/SP, na Rua Mário Stella, 355, CEP 18870-712. Atende de segunda a sexta, das 8h às 18h, e aos sábados, das 8h às 13h. WhatsApp: (14) 99166-7793 e (14) 99632-5919.",
   geo: {
     latitude: -23.3883268,
     longitude: -49.5062797,

@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { PHONE_CLARO, PHONE_VIVO, googleMapsPlaceLink, store } from "./links";
 import { PIX_KEY } from "./pix";
-import { buildJsonLd, buildMetadata, siteDescription, siteTitle } from "./seo";
+import {
+  buildJsonLd,
+  buildMetadata,
+  serializeJsonLd,
+  siteDescription,
+  siteTitle,
+} from "./seo";
 import { DEFAULT_SITE_URL } from "./site";
 
 describe("SEO local", () => {
@@ -40,5 +46,14 @@ describe("SEO local", () => {
     expect(json).not.toContain("99654-2733");
     expect(json).not.toMatch(/cnpj/i);
     expect(data.description).toBe(store.citation);
+    expect(data.address.postalCode).toBe("18870-712");
+    expect(json).not.toContain("18870-000");
+  });
+
+  it("escapa < no JSON-LD para não fechar o script", () => {
+    const raw = serializeJsonLd({ note: "a<b" });
+    expect(raw).not.toContain("<");
+    expect(raw).toContain("\\u003c");
+    expect(JSON.parse(raw)).toEqual({ note: "a<b" });
   });
 });

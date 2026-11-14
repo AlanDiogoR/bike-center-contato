@@ -50,6 +50,11 @@ describe("LinksSection", () => {
     const links = screen.getAllByRole("link");
     expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
     expect(links[0]).toHaveAttribute("href", googleReviewLink.href);
+    expect(links[0].className).toMatch(/animate-pulse-review/);
+    expect(links[0].className).toMatch(/motion-reduce:animate-none/);
+    expect(
+      screen.getByRole("link", { name: "Conversar no Whats (Claro)" }).className,
+    ).not.toMatch(/animate-pulse/);
     const pix = screen.getByRole("button", { name: "Pagar com Pix" });
     const claro = screen.getByRole("link", {
       name: "Conversar no Whats (Claro)",
