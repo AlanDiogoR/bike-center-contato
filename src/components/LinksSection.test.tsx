@@ -24,6 +24,10 @@ describe("LinksSection", () => {
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(
+      screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
+    ).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain("chat.whatsapp.com");
+    expect(
       screen.queryByRole("link", { name: /Vendas e orçamento|Oficina e peças/i }),
     ).not.toBeInTheDocument();
   });
@@ -49,6 +53,10 @@ describe("LinksSection", () => {
     render(<LinksSection />);
     const links = screen.getAllByRole("link");
     expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
+    expect(links[0]).toHaveTextContent("Avalie no Google");
+    expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "Avalie no Google",
+    );
     expect(links[0]).toHaveAttribute("href", googleReviewLink.href);
     expect(links[0].className).toMatch(/animate-pulse-review/);
     expect(links[0].className).toMatch(/motion-reduce:animate-none/);

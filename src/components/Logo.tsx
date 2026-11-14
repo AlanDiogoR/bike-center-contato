@@ -4,7 +4,7 @@ import { googleMapsPlaceLink, store } from "@/lib/links";
 export function Logo() {
   return (
     <div className="mb-2 flex flex-col items-center">
-      <div className="flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1.5 shadow-lg ring-4 ring-sun sm:h-44 sm:w-44">
+      <div className="flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1.5 shadow-lg ring-4 ring-[#9a3412] sm:h-44 sm:w-44">
         <Image
           src="/logo.png"
           alt="Bike Center Fartura — motos e bicicletas"

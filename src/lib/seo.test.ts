@@ -1,4 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { PNG } from "pngjs";
 import { PHONE_CLARO, PHONE_VIVO, googleMapsPlaceLink, store } from "./links";
 import { PIX_KEY } from "./pix";
 import {
@@ -48,6 +50,33 @@ describe("SEO local", () => {
     expect(data.description).toBe(store.citation);
     expect(data.address.postalCode).toBe("18870-712");
     expect(json).not.toContain("18870-000");
+  });
+
+  it("declara og:image 1200×630 igual ao arquivo", () => {
+    const png = PNG.sync.read(readFileSync("public/og.png"));
+    expect(png.width).toBe(1200);
+    expect(png.height).toBe(630);
+    const metadata = buildMetadata(DEFAULT_SITE_URL);
+    const images = metadata.openGraph?.images;
+    const image = Array.isArray(images) ? images[0] : images;
+    expect(image).toMatchObject({
+      url: "/og.png",
+      width: 1200,
+      height: 630,
+      alt: "Bike Center Fartura — Fartura/SP",
+    });
+    const twitterImages = metadata.twitter?.images;
+    const twitterImage = Array.isArray(twitterImages)
+      ? twitterImages[0]
+      : twitterImages;
+    expect(twitterImage).toMatchObject({
+      url: "/og.png",
+      width: 1200,
+      height: 630,
+    });
+    const apple = PNG.sync.read(readFileSync("src/app/apple-icon.png"));
+    expect(apple.width).toBe(180);
+    expect(apple.height).toBe(180);
   });
 
   it("escapa < no JSON-LD para não fechar o script", () => {

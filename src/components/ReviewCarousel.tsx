@@ -8,38 +8,32 @@ import {
   FaStar,
   FaWhatsapp,
 } from "react-icons/fa";
-import { SiGooglemaps, SiInstagram, SiMercadopago } from "react-icons/si";
+import { SiGooglemaps, SiMercadopago } from "react-icons/si";
 import { googleReviewLink } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
 
 const SLIDES = [
   {
-    id: "instagram",
-    step: "1",
-    title: "Abra o Instagram",
-    caption: "Toque no link da bio do @bikecenterfartura para abrir o site.",
-  },
-  {
     id: "site",
-    step: "2",
+    step: "1",
     title: "Toque em Avalie",
     caption: "No site, toque no botão amarelo “Avalie a Bike Center no Google”.",
   },
   {
     id: "maps",
-    step: "3",
+    step: "2",
     title: "Abra a ficha no Maps",
     caption: "O Google Maps abre a Bike Center Fartura na aba Avaliações.",
   },
   {
     id: "escrever",
-    step: "4",
+    step: "3",
     title: "Escreva a avaliação",
     caption: "Toque em “Escrever uma avaliação” e escolha as 5 estrelas.",
   },
   {
     id: "publicar",
-    step: "5",
+    step: "4",
     title: "Publique",
     caption: "Confira o texto e toque em Publicar. Obrigado pelo apoio!",
   },
@@ -72,106 +66,55 @@ function StatusBar({ dark = false }: { dark?: boolean }) {
 function TapHint({ label }: { label: string }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center">
-      <span className="rounded-full bg-[#ec6e37] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-zinc-950 shadow-lg">
+      <span className="rounded-full bg-sunset px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-ink shadow-lg">
         {label}
       </span>
     </div>
   );
 }
 
-function InstagramSlide() {
+function StepBadge({ n }: { n: string }) {
   return (
-    <PhoneFrame>
-      <div className="relative h-[320px] bg-white text-zinc-900">
-        <StatusBar />
-        <div className="flex items-center justify-between px-3 pb-2">
-          <span className="text-[11px] font-bold">bikecenterfartura</span>
-          <SiInstagram className="h-3.5 w-3.5 text-[#E4405F]" aria-hidden />
-        </div>
-        <div className="flex items-center gap-3 px-3">
-          <div className="h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-[#F9AB00] to-[#ec6e37] p-[2px]">
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[8px] font-black leading-tight text-[#9a3412]">
-              BC
-            </div>
-          </div>
-          <div className="flex flex-1 justify-around text-center text-[9px] text-zinc-500">
-            <div>
-              <p className="h-2.5 w-6 rounded bg-zinc-200" />
-              <p className="mt-1">pubs</p>
-            </div>
-            <div>
-              <p className="h-2.5 w-8 rounded bg-zinc-200" />
-              <p className="mt-1">seguidores</p>
-            </div>
-            <div>
-              <p className="h-2.5 w-6 rounded bg-zinc-200" />
-              <p className="mt-1">seguindo</p>
-            </div>
-          </div>
-        </div>
-        <div className="px-3 pt-2 text-[10px] leading-snug">
-          <p className="font-bold">Bike Center Fartura</p>
-          <p className="text-zinc-600">Motos, bikes e acessórios</p>
-          <p className="text-zinc-600">Rua Mário Stella, 355</p>
-        </div>
-        <div className="relative mx-3 mt-2 rounded-lg border-2 border-[#ec6e37] bg-zinc-50 px-2.5 py-2">
-          <p className="text-[8px] font-semibold uppercase tracking-wider text-zinc-500">
-            Link da bio
-          </p>
-          <p className="text-[11px] font-bold text-[#00376b] underline">
-            Nosso site — toque aqui
-          </p>
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
-            1
-          </div>
-        </div>
-        <div className="mt-2 grid grid-cols-3 gap-px bg-zinc-200">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-square bg-gradient-to-br from-zinc-100 to-zinc-200"
-            />
-          ))}
-        </div>
-        <TapHint label="Toque no link" />
-      </div>
-    </PhoneFrame>
+    <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-sunset text-[10px] font-black text-ink shadow">
+      {n}
+    </div>
   );
 }
 
 function SiteSlide() {
   return (
     <PhoneFrame>
-      <div className="relative h-[320px] bg-gradient-to-b from-zinc-900 via-zinc-800 to-zinc-900 text-white">
-        <StatusBar dark />
+      <div className="relative h-[320px] bg-paper text-ink">
+        <StatusBar />
         <div className="flex flex-col items-center px-3 pt-1">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full ring-2 ring-[#ec6e37]/50">
-            <span className="text-[8px] font-black text-[#ec6e37]">BC</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white ring-2 ring-[#9a3412]">
+            <span className="text-[8px] font-black text-ink">BC</span>
           </div>
-          <p className="mt-1 text-center text-[8px] text-zinc-300">
+          <p className="mt-1 text-center text-[8px] font-medium text-muted">
             Motos, bicicletas e acessórios
+          </p>
+          <p className="text-center text-[8px] font-semibold text-[#9a3412]">
+            Fartura/SP
           </p>
         </div>
         <div className="mt-2 flex flex-col gap-1.5 px-3">
-          <div className="relative rounded-lg border-2 border-white bg-gradient-to-r from-[#FBBC05] to-[#F9AB00] px-2 py-2 text-[10px] font-bold text-zinc-950 shadow-lg shadow-amber-500/40">
-            <span className="flex items-center gap-2">
-              <FaStar className="h-3.5 w-3.5 text-[#E37400]" aria-hidden />
+          <div className="relative rounded-xl bg-sun px-2 py-2 text-[10px] font-bold text-ink ring-2 ring-sunset">
+            <span className="flex items-center gap-1.5">
+              <FaStar className="h-3.5 w-3.5 text-[#9a3412]" aria-hidden />
               Avalie a Bike Center no Google
             </span>
-            <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
-              2
-            </div>
+            <StepBadge n="1" />
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-[#25D366] px-2 py-1.5 text-[9px] font-semibold text-zinc-950">
+          <div className="flex items-center gap-2 rounded-xl bg-pine px-2 py-1.5 text-[9px] font-semibold text-white">
             <FaWhatsapp className="h-3 w-3" aria-hidden />
             Conversar no Whats
           </div>
-          <div className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#FFE600] to-[#FFF4A3] px-2 py-1.5 text-[9px] font-semibold text-[#2B4D9E]">
-            <SiMercadopago className="h-3 w-3" aria-hidden />
+          <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
+            <SiMercadopago className="h-3 w-3" style={{ color: "#3483FA" }} aria-hidden />
             Loja no Mercado Livre
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/80 px-2 py-1.5 text-[9px] font-semibold text-zinc-100">
-            <SiGooglemaps className="h-3 w-3 text-[#4285F4]" aria-hidden />
+          <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
+            <SiGooglemaps className="h-3 w-3" style={{ color: "#1a73e8" }} aria-hidden />
             Como chegar
           </div>
         </div>
@@ -208,8 +151,8 @@ function MapsSlide() {
             <span className="text-zinc-500">Visão geral</span>
             <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1a73e8]">
               Avaliações
-              <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#ec6e37] text-[9px] font-black text-zinc-950">
-                3
+              <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-sunset text-[9px] font-black text-ink">
+                2
               </span>
             </span>
           </div>
@@ -231,16 +174,14 @@ function WriteReviewSlide() {
         <StatusBar />
         <p className="px-3 text-[12px] font-bold">Avaliações</p>
         <p className="px-3 text-[9px] text-zinc-500">Bike Center Fartura</p>
-        <div className="relative mx-3 mt-3 rounded-xl border-2 border-[#ec6e37] bg-[#e8f0fe] px-3 py-3">
+        <div className="relative mx-3 mt-3 rounded-xl border-2 border-sunset bg-[#e8f0fe] px-3 py-3">
           <p className="text-[11px] font-bold text-[#1a73e8]">
             Escrever uma avaliação
           </p>
           <p className="mt-1 text-[9px] text-zinc-600">
             Conte como foi sua visita à loja.
           </p>
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
-            4
-          </div>
+          <StepBadge n="3" />
         </div>
         <div className="mt-3 flex justify-center gap-1 text-[#E37400]">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -267,11 +208,7 @@ function PublishSlide() {
         <p className="px-3 text-[9px] text-zinc-500">Bike Center Fartura</p>
         <div className="mt-3 flex justify-center gap-1 text-[#FBBC05]">
           {Array.from({ length: 5 }).map((_, i) => (
-            <FaStar
-              key={i}
-              className="h-6 w-6 drop-shadow-sm"
-              aria-hidden
-            />
+            <FaStar key={i} className="h-6 w-6 drop-shadow-sm" aria-hidden />
           ))}
         </div>
         <p className="mt-1 text-center text-[9px] font-semibold text-zinc-500">
@@ -284,9 +221,7 @@ function PublishSlide() {
         </div>
         <div className="relative mx-3 mt-4 rounded-full bg-[#1a73e8] py-2 text-center text-[11px] font-bold text-white shadow">
           Publicar
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#ec6e37] text-[10px] font-black text-zinc-950 shadow">
-            5
-          </div>
+          <StepBadge n="4" />
         </div>
         <TapHint label="Toque em Publicar" />
       </div>
@@ -296,8 +231,6 @@ function PublishSlide() {
 
 function SlideMockup({ id }: { id: (typeof SLIDES)[number]["id"] }) {
   switch (id) {
-    case "instagram":
-      return <InstagramSlide />;
     case "site":
       return <SiteSlide />;
     case "maps":
@@ -317,12 +250,9 @@ export function ReviewCarousel() {
   const slide = SLIDES[index];
   const last = SLIDES.length - 1;
 
-  const go = useCallback(
-    (next: number) => {
-      setIndex((next + SLIDES.length) % SLIDES.length);
-    },
-    [],
-  );
+  const go = useCallback((next: number) => {
+    setIndex((next + SLIDES.length) % SLIDES.length);
+  }, []);
 
   return (
     <section
@@ -348,7 +278,7 @@ export function ReviewCarousel() {
         <p className="text-center font-display text-xs uppercase tracking-[0.16em] text-[#9a3412]">
           Passo {slide.step} de {SLIDES.length}
         </p>
-        <h2 className="mt-1 text-center font-display text-2xl uppercase leading-none text-ink">
+        <h2 className="mt-1 flex min-h-12 items-center justify-center text-center font-display text-2xl uppercase leading-none text-ink">
           {slide.title}
         </h2>
 
@@ -356,7 +286,7 @@ export function ReviewCarousel() {
           <SlideMockup id={slide.id} />
         </div>
 
-        <p className="mx-auto mt-4 max-w-xs text-center text-base leading-snug text-muted">
+        <p className="mx-auto mt-4 flex min-h-20 max-w-xs items-start justify-center text-center text-base leading-snug text-muted">
           {slide.caption}
         </p>
 
@@ -395,32 +325,34 @@ export function ReviewCarousel() {
               className="inline-flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
               <span
-                className={`h-2.5 rounded-full ${
-                  i === index ? "w-6 bg-[#9a3412]" : "w-2.5 bg-[#8a6a48]"
+                className={`block h-2.5 w-2.5 origin-center rounded-full bg-[#8a6a48] motion-reduce:transform-none ${
+                  i === index ? "scale-x-[2.4] bg-[#9a3412]" : ""
                 }`}
               />
             </button>
           ))}
         </div>
 
-        {index === last ? (
-          <a
-            href={googleReviewLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              trackOutboundClick(
-                googleReviewLink.label,
-                googleReviewLink.href,
-                "review",
-              )
-            }
-            className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-sun px-4 py-3 text-base font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-          >
-            Avaliar agora no Google
-            <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden />
-          </a>
-        ) : null}
+        <div className="mt-4 h-12" data-testid="review-cta-slot">
+          {index === last ? (
+            <a
+              href={googleReviewLink.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() =>
+                trackOutboundClick(
+                  googleReviewLink.label,
+                  googleReviewLink.href,
+                  "review",
+                )
+              }
+              className="flex h-12 items-center justify-center gap-2 rounded-xl bg-sun px-4 text-base font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              Avaliar agora no Google
+              <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          ) : null}
+        </div>
       </div>
     </section>
   );

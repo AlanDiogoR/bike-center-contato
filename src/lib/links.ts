@@ -63,11 +63,6 @@ export const whatsappSalesLinks = [
   },
 ] as const;
 
-export const whatsappGroupLink = {
-  label: "Grupo WhatsApp — Novidades da loja",
-  href: "https://chat.whatsapp.com/CMpFIfBfx5UDumCB77Acdp",
-} as const;
-
 const MERCADO_LIVRE_URL_DEFAULT =
   "https://lista.mercadolivre.com.br/_CustId_569984748?item_id=MLB6427585964&category_id=MLB243168&seller_id=569984748&client=recoview-selleritems&recos_listing=true#origin=vip&component=sellerData&typeSeller=classic";
 

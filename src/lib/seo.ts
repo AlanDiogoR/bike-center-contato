@@ -40,10 +40,10 @@ export function buildMetadata(url: string): Metadata {
       description: siteDescription,
       images: [
         {
-          url: "/logo.png",
+          url: "/og.png",
           width: 1200,
-          height: 1200,
-          alt: "Bike Center Fartura — logo",
+          height: 630,
+          alt: "Bike Center Fartura — Fartura/SP",
         },
       ],
     },
@@ -51,7 +51,14 @@ export function buildMetadata(url: string): Metadata {
       card: "summary_large_image",
       title: siteTitle,
       description: siteDescription,
-      images: ["/logo.png"],
+      images: [
+        {
+          url: "/og.png",
+          width: 1200,
+          height: 630,
+          alt: "Bike Center Fartura — Fartura/SP",
+        },
+      ],
     },
     robots: { index: true, follow: true },
   };
