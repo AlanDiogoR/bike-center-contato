@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Bike Center">
-  <rect width="32" height="32" rx="7" fill="#ffc51b"/>
-  <text x="16" y="21" font-size="11" font-weight="800" fill="#171516" text-anchor="middle" font-family="system-ui,Segoe UI,sans-serif">BC</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-label="Bike Center" role="img" viewBox="0 0 32 32"><rect width="32" height="32" fill="#ffc51b" rx="7"/><text x="16" y="21" fill="#171516" font-family="system-ui,Segoe UI,sans-serif" font-size="11" font-weight="800" text-anchor="middle">BC</text></svg>
