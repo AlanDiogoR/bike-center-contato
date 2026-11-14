@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
-import { googleMapsPlaceLink, store, whatsappSalesLinks } from "@/lib/links";
+import { buildJsonLd, buildMetadata } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,96 +11,9 @@ const inter = Inter({
   display: "swap",
 });
 
-const title = "Bike Center Fartura | Motos, Bicicletas e Acessórios";
-const description =
-  "Motos, bicicletas e acessórios em Fartura/SP. Rua Mário Stella, 355. Seg–Sex 8h–18h · Sáb 8h–13h. Fale no WhatsApp.";
+export const metadata: Metadata = buildMetadata(siteUrl);
 
-const keywords = [
-  "motos em fartura",
-  "loja de bicicletas",
-  "comprar moto seminova",
-  "bike center fartura",
-  "acessórios para motos",
-  "rua mário stella fartura",
-  "oficina de motos fartura",
-];
-
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  name: store.name,
-  description,
-  url: siteUrl,
-  telephone: whatsappSalesLinks.map((link) => `+${link.phoneDigits}`),
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: store.address.street,
-    addressLocality: store.address.city,
-    addressRegion: store.address.state,
-    postalCode: store.address.postalCode,
-    addressCountry: store.address.country,
-  },
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-      ],
-      opens: store.hours.weekdayOpens,
-      closes: store.hours.weekdayCloses,
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: store.hours.saturdayOpens,
-      closes: store.hours.saturdayCloses,
-    },
-  ],
-  hasMap: googleMapsPlaceLink.href,
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: store.geo.latitude,
-    longitude: store.geo.longitude,
-  },
-};
-
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title,
-  description,
-  keywords,
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    locale: "pt_BR",
-    url: "/",
-    siteName: "Bike Center Fartura",
-    title,
-    description,
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 1200,
-        alt: "Bike Center Fartura — logo",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title,
-    description,
-    images: ["/logo.png"],
-  },
-  robots: { index: true, follow: true },
-};
+const jsonLd = buildJsonLd(siteUrl);
 
 export default function RootLayout({
   children,

@@ -12,5 +12,7 @@ describe("SiteFooter", () => {
       screen.getByText("WhatsApp (14) 99166-7793 · (14) 99632-5919"),
     ).toBeInTheDocument();
     expect(screen.getByText("Fartura/SP")).toBeInTheDocument();
+    expect(screen.getByText(store.citation)).toBeInTheDocument();
+    expect(store.citation).not.toMatch(/99654-2733/);
   });
 });

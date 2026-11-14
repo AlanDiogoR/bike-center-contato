@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install zbar
+        run: sudo apt-get update && sudo apt-get install -y zbar-tools
+
       - name: Lint
         run: npm run lint
 

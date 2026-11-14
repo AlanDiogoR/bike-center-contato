@@ -19,5 +19,30 @@ describe("trackOutboundClick", () => {
       link_destination: "https://example.com",
       link_category: "whatsapp",
     });
+    expect(w.dataLayer[0]).not.toHaveProperty("utm_source");
+  });
+
+  it("anexa os UTMs da placa ao evento de clique", () => {
+    window.history.pushState(
+      {},
+      "",
+      "/?utm_source=placa&utm_medium=nfc&utm_campaign=placa_balcao&ignored=1",
+    );
+    const w = window as Window & { dataLayer: Record<string, unknown>[] };
+
+    trackOutboundClick(
+      "Avalie a Bike Center no Google",
+      "https://www.google.com/maps",
+      "review",
+    );
+
+    expect(w.dataLayer[0]).toMatchObject({
+      event: "outbound_click",
+      link_category: "review",
+      utm_source: "placa",
+      utm_medium: "nfc",
+      utm_campaign: "placa_balcao",
+    });
+    expect(w.dataLayer[0]).not.toHaveProperty("ignored");
   });
 });

@@ -64,6 +64,9 @@ describe("links", () => {
     expect(googleMapsPlaceLink.href).toContain("Bike+Center+Fartura");
     expect(googleMapsPlaceLink.href).toContain("-23.3883268,-49.5062797");
     expect(googleReviewLink.label).toBe("Nos avalie no Google");
+    expect(googleReviewLink.prominentLabel).toBe(
+      "Avalie a Bike Center no Google",
+    );
     expect(googleReviewLink.href).toContain("Bike+Center+Fartura");
     expect(googleReviewLink.href).toContain("-23.3883268,-49.5062797");
     expect(googleReviewLink.href).toContain("!9m1!1b1");

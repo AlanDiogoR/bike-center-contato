@@ -29,7 +29,7 @@ describe("ReviewCarousel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Próximo slide" }));
     expect(screen.getByText("Passo 2 de 5")).toBeInTheDocument();
     expect(screen.getByText("Toque em Avalie")).toBeInTheDocument();
-    expect(screen.getByText("Nos avalie no Google")).toBeInTheDocument();
+    expect(screen.getByText("Avalie a Bike Center no Google")).toBeInTheDocument();
     expect(screen.getByText("Toque no botão")).toBeInTheDocument();
   });
 
