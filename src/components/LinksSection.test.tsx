@@ -24,6 +24,10 @@ describe("LinksSection", () => {
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(
+      screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
+    ).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain("chat.whatsapp.com");
+    expect(
       screen.queryByRole("link", { name: /Vendas e orçamento|Oficina e peças/i }),
     ).not.toBeInTheDocument();
   });

@@ -33,6 +33,8 @@ describe("Logo", () => {
     render(<Logo />);
     const img = screen.getByAltText(/Bike Center Fartura/i);
     expect(img).toHaveAttribute("src", "/logo.png");
+    expect(img.parentElement).toHaveClass("ring-[#9a3412]");
+    expect(img.parentElement?.className).not.toContain("ring-sun");
   });
 
   it("mostra a tagline e a linha de confiança com link para o Maps", () => {
