@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Oswald, Source_Sans_3 } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
+import { PlacaBootstrapScript } from "@/components/PlacaBootstrapScript";
+import { PlacaUtmSync } from "@/components/PlacaUtmSync";
 import { buildJsonLd, buildMetadata, serializeJsonLd } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 import "./globals.css";
@@ -38,8 +40,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${sourceSans.variable} ${oswald.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${sourceSans.variable} ${oswald.variable}`}
+      suppressHydrationWarning
+    >
       <body className="bg-paper font-sans text-ink">
+        <PlacaBootstrapScript />
+        <PlacaUtmSync />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}

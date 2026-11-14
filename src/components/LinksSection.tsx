@@ -86,6 +86,7 @@ export function LinksSection() {
           href={googleReviewLink.href}
           target="_blank"
           rel="noopener noreferrer"
+          data-placa="hide"
           onClick={() =>
             trackOutboundClick(
               googleReviewLink.prominentLabel,
@@ -101,6 +102,27 @@ export function LinksSection() {
           <span className="flex-1 leading-snug">
             {googleReviewLink.prominentLabel}
           </span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
+        </a>
+
+        <a
+          href={googleReviewLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-placa="show"
+          onClick={() =>
+            trackOutboundClick(
+              "Avaliar no Google",
+              googleReviewLink.href,
+              "review",
+            )
+          }
+          className={`animate-pulse-review motion-reduce:animate-none flex min-h-24 w-full items-center gap-4 rounded-2xl bg-sun px-5 py-6 text-left text-2xl font-bold text-ink ring-2 ring-sunset ${focusRing}`}
+        >
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
+            <FaStar className="h-8 w-8 text-[#9a3412]" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">Avaliar no Google</span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
         </a>
 
@@ -219,7 +241,7 @@ export function LinksSection() {
         </a>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8" data-placa="hide">
         <ReviewCarousel />
       </div>
 
