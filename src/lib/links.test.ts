@@ -81,6 +81,10 @@ describe("links", () => {
 
   it("expõe endereço e horário confirmados pelo dono da loja", () => {
     expect(store.address.street).toBe("Rua Mário Stella, 355");
+    expect(store.address.postalCode).toBe("18870-712");
+    expect(store.address.napDisplay).toContain("18870-712");
+    expect(store.citation).toContain("CEP 18870-712");
+    expect(store.citation).not.toContain("18870-000");
     expect(store.address.display).toBe("Rua Mário Stella, 355 · Fartura/SP");
     expect(store.address.display).not.toMatch(/Vila Nova/i);
     expect(store.hours.display).toBe("Seg–Sex 8h–18h · Sáb 8h–13h");

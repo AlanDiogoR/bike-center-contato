@@ -8,20 +8,30 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        paper: "#fff6e4",
+        ink: "#171516",
+        sun: "#ffc51b",
+        sunset: "#f47a15",
+        brandred: "#e50d25",
+        pine: "#0b5a32",
+        muted: "#4a3424",
+      },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-body)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-body)", "system-ui", "sans-serif"],
       },
       animation: {
-        "pulse-soft":
-          "pulse-soft 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "pulse-review":
+          "pulse-review 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
-        "pulse-soft": {
+        "pulse-review": {
           "0%, 100%": {
-            boxShadow: "0 0 0 0 rgba(37, 211, 102, 0.45)",
+            boxShadow: "0 0 0 0 rgba(244, 122, 21, 0.55)",
           },
-          "50%": {
-            boxShadow: "0 0 0 14px rgba(37, 211, 102, 0)",
+          "70%": {
+            boxShadow: "0 0 0 14px rgba(244, 122, 21, 0)",
           },
         },
       },

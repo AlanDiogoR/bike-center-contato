@@ -53,8 +53,7 @@ function expectBrCode(payload: string, amount: string | null) {
   }
 
   const fields = parseTLV(payload);
-  const tags = fields.map((field) => field.tag);
-  expect(tags).not.toContain("01");
+  expect(child(fields, "01")?.value).toBe("11");
   const merchant = child(fields, "26");
   expect(merchant?.children?.map((item) => item.tag)).toEqual(["00", "01"]);
   expect(child(merchant?.children ?? [], "00")?.value).toBe("br.gov.bcb.pix");

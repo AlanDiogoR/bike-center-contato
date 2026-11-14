@@ -14,6 +14,7 @@ export const PIX_BENEFICIARY_LABEL =
 export const PIX_KEY_LABEL = "Chave Pix (telefone): (14) 99654-2733";
 export const PIX_HOW_TO_PAY =
   "Abra o app do seu banco > Pix > Pix copia e cola (ou Ler QR) > confira o nome e confirme";
+export const PIX_SHARE_LABEL = "Compartilhar / Abrir no app do banco";
 
 const AMOUNT_RE = /^(?:0|[1-9]\d{0,9})\.\d{2}$/;
 
@@ -66,6 +67,7 @@ export function buildPixPayload(amount?: string | null): string {
   const merchantAccount = tlv("00", PIX_GUI) + tlv("01", PIX_KEY);
   const parts = [
     tlv("00", "01"),
+    tlv("01", "11"),
     tlv("26", merchantAccount),
     tlv("52", "0000"),
     tlv("53", "986"),

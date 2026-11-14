@@ -32,7 +32,7 @@ describe("buildPixPayload", () => {
       "26360014br.gov.bcb.pix0114+55149965427335204000053039865802BR5924BIKE CENTER COM BIC LTDA6007FARTURA62070503***6304",
     );
     expect(payload).toContain("53039865802BR");
-    expect(payload.startsWith("000201")).toBe(true);
+    expect(payload.startsWith("000201010211")).toBe(true);
     expect(payload).toMatch(/6304[0-9A-F]{4}$/);
     expect(payload).not.toMatch(/CNPJ/i);
   });

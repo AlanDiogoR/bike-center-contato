@@ -42,7 +42,7 @@ describe("PixModal", () => {
 
   it("aplica a máscara e inclui R$ 10,00 no payload", async () => {
     openPix();
-    const input = await screen.findByLabelText("Valor em reais (opcional)");
+    const input = await screen.findByLabelText(/Valor em reais/i);
     fireEvent.change(input, { target: { value: "1000" } });
     expect(input).toHaveValue("10,00");
     expect(screen.getByRole("textbox", { name: "Pix copia e cola" })).toHaveValue(
@@ -52,7 +52,7 @@ describe("PixModal", () => {
 
   it("bloqueia valor zero", async () => {
     openPix();
-    const input = await screen.findByLabelText("Valor em reais (opcional)");
+    const input = await screen.findByLabelText(/Valor em reais/i);
     fireEvent.change(input, { target: { value: "0" } });
     expect(screen.getByRole("alert")).toHaveTextContent(/maior que zero/i);
     expect(
@@ -64,7 +64,7 @@ describe("PixModal", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     openPix();
-    fireEvent.click(await screen.findByRole("button", { name: "Copiar" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Copiar código" }));
     expect(writeText).toHaveBeenCalledWith(buildPixPayload(null));
     expect(await screen.findByText("Código Pix copiado")).toBeInTheDocument();
   });
@@ -86,14 +86,20 @@ describe("PixModal", () => {
       value: share,
     });
     openPix();
-    fireEvent.click(await screen.findByRole("button", { name: "Compartilhar" }));
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Compartilhar / Abrir no app do banco",
+      }),
+    );
     await waitFor(() => {
       expect(share).toHaveBeenCalledWith({
         title: "Pix Bike Center",
         text: buildPixPayload(null),
       });
     });
-    expect(await screen.findByText("Código Pix compartilhado")).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Lista do celular aberta/i),
+    ).toBeInTheDocument();
   });
 
   it("prende o Tab dentro do diálogo", async () => {

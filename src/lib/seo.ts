@@ -104,3 +104,8 @@ export function buildJsonLd(url: string) {
     sameAs: socialLinks.map((link) => link.href),
   };
 }
+
+/** Evita que um `<` no JSON quebre o `<script>` ou vire HTML. */
+export function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
