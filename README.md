@@ -57,7 +57,7 @@ O workflow em `.github/workflows/ci.yml` executa lint, testes e build em cada pu
 
 Quem abre a página com `utm_source=placa` (também vale chave suja como `UTM_Source`, `utm _source` ou `utm%20_source`) vê um botão grande **Avaliar no Google** no topo dos links e não vê o carrossel “Como nos avaliar”. O endereço é o mesmo `googleReviewLink.href` de todo mundo: sem pré-filtro de estrelas, sem pergunta antes do link e sem texto de brinde, oferta, VIP ou prêmio. A animação de pulso e o `prefers-reduced-motion` continuam iguais.
 
-Sem esse parâmetro, a página permanece a de hoje. A troca é feita no HTML estático: um script no início do body marca `<html data-utm-source="placa">` antes da pintura e o CSS mostra só um dos dois blocos, para não deslocar o layout nem divergir na hidratação.
+Sem esse parâmetro, a página permanece a de hoje. A troca é feita no HTML estático: um script no início do body marca `<html data-utm-source="placa">` antes da pintura e o CSS mostra só um dos dois blocos, para não deslocar o layout nem divergir na hidratação. Esse script (`src/lib/placa-bootstrap.ts`) é a única leitura de UTM no caminho crítico: é texto fixo, lê a query em runtime com `URLSearchParams` e só escreve no DOM valores de uma allowlist (`placa`); nada da query é interpolado no HTML.
 
 ## Estrutura principal
 
