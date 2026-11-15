@@ -29,7 +29,8 @@ const SLIDES = [
     id: "escrever",
     step: "3",
     title: "Escreva a avaliação",
-    caption: "Toque em “Escrever uma avaliação” e escolha as 5 estrelas.",
+    caption:
+      "Toque em “Escrever uma avaliação” e conte como foi sua experiência.",
   },
   {
     id: "publicar",
@@ -183,7 +184,7 @@ function WriteReviewSlide() {
           </p>
           <StepBadge n="3" />
         </div>
-        <div className="mt-3 flex justify-center gap-1 text-[#E37400]">
+        <div className="mt-3 flex justify-center gap-1 text-zinc-300">
           {Array.from({ length: 5 }).map((_, i) => (
             <FaStar key={i} className="h-5 w-5" aria-hidden />
           ))}
@@ -206,18 +207,17 @@ function PublishSlide() {
         <StatusBar />
         <p className="px-3 text-[12px] font-bold">Sua avaliação</p>
         <p className="px-3 text-[9px] text-zinc-500">Bike Center Fartura</p>
-        <div className="mt-3 flex justify-center gap-1 text-[#FBBC05]">
+        <div className="mt-3 flex justify-center gap-1 text-zinc-300">
           {Array.from({ length: 5 }).map((_, i) => (
-            <FaStar key={i} className="h-6 w-6 drop-shadow-sm" aria-hidden />
+            <FaStar key={i} className="h-6 w-6" aria-hidden />
           ))}
         </div>
-        <p className="mt-1 text-center text-[9px] font-semibold text-zinc-500">
-          5 de 5 estrelas
-        </p>
-        <div className="mx-3 mt-3 space-y-1.5 rounded-lg bg-zinc-50 p-2">
+        <div className="mx-3 mt-3 space-y-1.5 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
+          <p className="text-[9px] font-medium text-zinc-600">
+            Conte como foi sua experiência
+          </p>
           <div className="h-2 rounded bg-zinc-200" />
           <div className="h-2 w-5/6 rounded bg-zinc-200" />
-          <div className="h-2 w-2/3 rounded bg-zinc-200" />
         </div>
         <div className="relative mx-3 mt-4 rounded-full bg-[#1a73e8] py-2 text-center text-[11px] font-bold text-white shadow">
           Publicar
