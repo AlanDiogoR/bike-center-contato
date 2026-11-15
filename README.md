@@ -55,26 +55,26 @@ A estrutura do banco para captação de leads VIP com consentimento LGPD fica ve
 
 ### Variáveis no Netlify
 
-Configure em **Site settings → Environment variables**:
+As variáveis abaixo ficam a cargo do **DevOps** no momento de aplicar em produção (**Site settings → Environment variables** — nada deve ser configurado no Netlify antes disso):
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 > **Segurança:** somente a chave pública `anon` pode ir para o client (`NEXT_PUBLIC_*`). **Nunca** adicione a `service_role` key no client ou em variáveis públicas do Netlify.
 
-### Como aplicar a migration em branch / projeto dev
+### Validação e aplicação da migration
 
-Com o [Supabase CLI](https://supabase.com/docs/guides/cli), aplique a migration apontando para o banco de desenvolvimento/branch:
+Não há projeto Supabase de desenvolvimento separado (existe apenas um único projeto Supabase, de produção). Por isso, toda a validação de banco e RLS durante o desenvolvimento e no CI é feita **exclusivamente em PostgreSQL local** (sem tocar no projeto Supabase real).
+
+> **Aviso importante (Produção):** a migration será aplicada em produção **somente após aprovação de QA, Segurança e OK explícito do Alan**, momento em que o DevOps executará o `supabase db push` e configurará as variáveis no Netlify:
 
 ```bash
-supabase db push --db-url "postgresql://postgres:<SENHA_DB_DEV>@db.<PROJECT_REF_DEV>.supabase.co:5432/postgres"
+supabase db push --db-url "postgresql://postgres:<SENHA_DB>@db.<PROJECT_REF>.supabase.co:5432/postgres"
 ```
 
-> **Aviso importante (Produção):** **NÃO** aplique a migration em produção por conta própria. A execução em **prod** só pode ser feita **com OK explícito do Alan**.
+### Teste local e no CI de RLS (PostgreSQL)
 
-### Teste local de RLS (Postgres 17)
-
-O teste `src/lib/vip-leads.pg.test.ts` sobe um cluster temporário com `initdb` (`/usr/lib/postgresql/17/bin` ou `PG_BIN`), aplica `tests/sql/supabase-stub.sql` e `supabase/migrations/20261115000000_vip_leads.sql`, e valida RLS, privilégios e constraints. Caso o binário local do Postgres não esteja instalado (ex.: runner padrão de CI), a suíte é ignorada via `describe.skipIf`.
+O teste `src/lib/vip-leads.pg.test.ts` localiza automaticamente qualquer versão disponível em `/usr/lib/postgresql/*/bin` (ou `PG_BIN`), sobe um cluster temporário com `initdb`, aplica `tests/sql/supabase-stub.sql` e `supabase/migrations/20261115000000_vip_leads.sql`, e valida RLS, privilégios e constraints localmente e no GitHub Actions (`.github/workflows/ci.yml`). O `describe.skipIf` é mantido apenas como fallback caso nenhum binário local do PostgreSQL exista.
 
 ## Scripts
 
