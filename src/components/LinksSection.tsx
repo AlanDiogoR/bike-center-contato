@@ -76,54 +76,49 @@ function PixButton() {
   );
 }
 
+const reviewCtas = [
+  {
+    placa: "hide",
+    track: googleReviewLink.prominentLabel,
+    ariaLabel: googleReviewLink.prominentLabel,
+    size: "min-h-16 text-lg",
+    text: "Avalie no Google",
+  },
+  {
+    placa: "show",
+    track: "Avaliar no Google",
+    ariaLabel: undefined,
+    size: "min-h-24 text-2xl",
+    text: "Avaliar no Google",
+  },
+] as const;
+
 export function LinksSection() {
   return (
     <div className="mx-auto w-full max-w-md px-1 pb-10 pt-2">
       <div className="flex flex-col gap-3">
-        <a
-          href={googleReviewLink.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-placa="hide"
-          onClick={() =>
-            trackOutboundClick(
-              googleReviewLink.prominentLabel,
-              googleReviewLink.href,
-              "review",
-            )
-          }
-          aria-label={googleReviewLink.prominentLabel}
-          className={`animate-pulse-review motion-reduce:animate-none flex min-h-16 w-full min-w-0 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left text-lg font-bold text-ink ring-2 ring-sunset ${focusRing}`}
-        >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
-            <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
-          </span>
-          <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
-            Avalie no Google
-          </span>
-          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
-        </a>
-
-        <a
-          href={googleReviewLink.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-placa="show"
-          onClick={() =>
-            trackOutboundClick(
-              "Avaliar no Google",
-              googleReviewLink.href,
-              "review",
-            )
-          }
-          className={`animate-pulse-review motion-reduce:animate-none flex min-h-24 w-full items-center gap-4 rounded-2xl bg-sun px-5 py-6 text-left text-2xl font-bold text-ink ring-2 ring-sunset ${focusRing}`}
-        >
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white">
-            <FaStar className="h-8 w-8 text-[#9a3412]" aria-hidden />
-          </span>
-          <span className="min-w-0 flex-1 leading-tight">Avaliar no Google</span>
-          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
-        </a>
+        {reviewCtas.map((cta) => (
+          <a
+            key={cta.placa}
+            href={googleReviewLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-placa={cta.placa}
+            aria-label={cta.ariaLabel}
+            onClick={() =>
+              trackOutboundClick(cta.track, googleReviewLink.href, "review")
+            }
+            className={`animate-pulse-review motion-reduce:animate-none flex w-full min-w-0 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left font-bold text-ink ring-2 ring-sunset ${focusRing} ${cta.size}`}
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
+              <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
+              {cta.text}
+            </span>
+            <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
+          </a>
+        ))}
 
         <PixButton />
 

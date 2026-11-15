@@ -28,4 +28,4 @@
  */
 export const UTM_SOURCE_ALLOWLIST = ["placa"] as const;
 
-export const PLACA_BOOTSTRAP_SCRIPT = `{let r=document.documentElement,a='data-utm-source',s;try{new URLSearchParams(location.search).forEach((v,k)=>{if(s==null){k=k.replaceAll('+',' ');try{k=decodeURIComponent(k)}catch{}if(k.replace(/%20|\\s/gi,'').toLowerCase()=='utm_source')s=v.trim().toLowerCase()}})}catch{}['placa'].includes(s)?r.setAttribute(a,s):r.removeAttribute(a)}`;
+export const PLACA_BOOTSTRAP_SCRIPT = `{let r=document.documentElement,a='data-utm-source',s;for(let[k,v]of new URLSearchParams(location.search))try{if(decodeURIComponent(k.replaceAll('+',' ')).replace(/%20|\\s/gi,'').toLowerCase()=='utm_source'){s=v.trim().toLowerCase();break}}catch{}['placa'].includes(s)?r.setAttribute(a,s):r.removeAttribute(a)}`;

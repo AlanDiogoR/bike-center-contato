@@ -46,12 +46,12 @@ export default function RootLayout({
     >
       <body className="bg-paper font-sans text-ink">
         <PlacaBootstrapScript />
+        <Analytics />
+        {children}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
-        <Analytics />
-        {children}
       </body>
     </html>
   );
