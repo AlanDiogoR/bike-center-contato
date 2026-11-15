@@ -88,7 +88,7 @@ const reviewCtas = [
     placa: "show",
     track: "Avaliar no Google",
     ariaLabel: undefined,
-    size: "min-h-24 text-2xl",
+    size: "min-h-24 text-2xl text-[clamp(1.25rem,6.4vw,1.5rem)]",
     text: "Avaliar no Google",
   },
 ] as const;
@@ -113,7 +113,7 @@ export function LinksSection() {
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
               <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
             </span>
-            <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
+            <span className="min-w-0 flex-1 break-words leading-snug">
               {cta.text}
             </span>
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />

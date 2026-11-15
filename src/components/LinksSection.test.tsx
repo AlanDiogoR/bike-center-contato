@@ -79,7 +79,7 @@ describe("LinksSection", () => {
     const links = screen.getAllByRole("link");
     expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
     expect(links[0]).toHaveTextContent("Avalie no Google");
-    expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
+    expect(links[0].querySelector(".break-words")).toHaveTextContent(
       "Avalie no Google",
     );
     expect(links[0]).toHaveAttribute("href", googleReviewLink.href);
