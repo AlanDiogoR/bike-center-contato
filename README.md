@@ -35,8 +35,46 @@ Copie `.env.example` para `.env.local` e ajuste:
 | `NEXT_PUBLIC_HIGHLIGHT_HREF` | URL do slot de oferta (obrigatório junto com o label para exibir) |
 | `NEXT_PUBLIC_GTM_ID` | Google Tag Manager (opcional) |
 | `NEXT_PUBLIC_FB_PIXEL_ID` | Meta Pixel (opcional) |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase para a lista VIP |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública (`anon`) do Supabase — **nunca** use `service_role` no client |
 
 No Netlify: **Site settings → Environment variables**.
+
+## Banco VIP (Supabase)
+
+A estrutura do banco para captação de leads VIP com consentimento LGPD fica versionada em `supabase/`:
+
+- `supabase/config.toml` — configuração mínima com `enable_signup = false` em `[auth]` (cadastro público de contas desligado; apenas o administrador autenticado acessa os dados).
+- `supabase/migrations/20261115000000_vip_leads.sql` — cria `public.vip_leads` com:
+  - `id` (`uuid`, PK, `default gen_random_uuid()`), `nome` (1–80 caracteres), `whatsapp_e164` (`^\+55[1-9][0-9]{9,10}$`, índice único), `interesse` (`'moto' | 'bike' | 'ambos'`), `consent_at` (`timestamptz not null`), `consent_text_version` (`text not null`), `utm_source` e `utm_campaign` (limitados a 120 caracteres), `opted_out_at` (`timestamptz null`) e `created_at` (`timestamptz not null default now()`).
+  - **RLS ativa e forçada** (`ENABLE ROW LEVEL SECURITY` + `FORCE ROW LEVEL SECURITY`).
+  - **Menor privilégio para `anon`**: `REVOKE ALL` na tabela e `GRANT INSERT` apenas nas colunas do formulário (`nome`, `whatsapp_e164`, `interesse`, `consent_at`, `consent_text_version`, `utm_source`, `utm_campaign`). O papel `anon` não tem `SELECT`, `UPDATE` nem `DELETE`, e não consegue definir `id`, `created_at` ou `opted_out_at`.
+  - **Policies**:
+    - `INSERT` para `anon` e `authenticated` exigindo `consent_at is not null`, `consent_text_version` não vazio e `opted_out_at is null`.
+    - `SELECT`, `UPDATE` e `DELETE` restritos exclusivamente a `authenticated` com `(auth.jwt() ->> 'email') = 'alandiogor@gmail.com'`.
+
+### Variáveis no Netlify
+
+Configure em **Site settings → Environment variables**:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+> **Segurança:** somente a chave pública `anon` pode ir para o client (`NEXT_PUBLIC_*`). **Nunca** adicione a `service_role` key no client ou em variáveis públicas do Netlify.
+
+### Como aplicar a migration em branch / projeto dev
+
+Com o [Supabase CLI](https://supabase.com/docs/guides/cli), aplique a migration apontando para o banco de desenvolvimento/branch:
+
+```bash
+supabase db push --db-url "postgresql://postgres:<SENHA_DB_DEV>@db.<PROJECT_REF_DEV>.supabase.co:5432/postgres"
+```
+
+> **Aviso importante (Produção):** **NÃO** aplique a migration em produção por conta própria. A execução em **prod** só pode ser feita **com OK explícito do Alan**.
+
+### Teste local de RLS (Postgres 17)
+
+O teste `src/lib/vip-leads.pg.test.ts` sobe um cluster temporário com `initdb` (`/usr/lib/postgresql/17/bin` ou `PG_BIN`), aplica `tests/sql/supabase-stub.sql` e `supabase/migrations/20261115000000_vip_leads.sql`, e valida RLS, privilégios e constraints. Caso o binário local do Postgres não esteja instalado (ex.: runner padrão de CI), a suíte é ignorada via `describe.skipIf`.
 
 ## Scripts
 
