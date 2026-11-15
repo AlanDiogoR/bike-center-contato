@@ -14,3 +14,7 @@ major_version = 17
 [auth]
 enabled = true
 enable_signup = false
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = false

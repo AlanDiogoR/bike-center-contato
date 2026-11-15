@@ -44,14 +44,13 @@ No Netlify: **Site settings → Environment variables**.
 
 A estrutura do banco para captação de leads VIP com consentimento LGPD fica versionada em `supabase/`:
 
-- `supabase/config.toml` — configuração mínima com `enable_signup = false` em `[auth]` (cadastro público de contas desligado; apenas o administrador autenticado acessa os dados).
-- `supabase/migrations/20261115000000_vip_leads.sql` — cria `public.vip_leads` com:
-  - `id` (`uuid`, PK, `default gen_random_uuid()`), `nome` (1–80 caracteres), `whatsapp_e164` (`^\+55[1-9][0-9]{9,10}$`, índice único), `interesse` (`'moto' | 'bike' | 'ambos'`), `consent_at` (`timestamptz not null`), `consent_text_version` (`text not null`), `utm_source` e `utm_campaign` (limitados a 120 caracteres), `opted_out_at` (`timestamptz null`) e `created_at` (`timestamptz not null default now()`).
+- `supabase/config.toml` — configuração mínima com `enable_signup = false` e `enable_anonymous_sign_ins = false` em `[auth]`, além de `enable_signup = false` em `[auth.email]` (cadastro público e sessões anônimas desligados; apenas o administrador autenticado acessa os dados).
+- `supabase/migrations/20261115000000_vip_leads.sql` — migration idempotente que cria `public.vip_leads` e a RPC `public.vip_lead_signup`:
+  - Colunas: `id` (`uuid`, PK, `default gen_random_uuid()`), `nome` (1–80 caracteres), `whatsapp_e164` (`^\+55[1-9][0-9]{9,10}$`, índice único), `interesse` (`'moto' | 'bike' | 'ambos'`), `consent_at` (`timestamptz not null default now()`, forçado no servidor também via trigger `BEFORE INSERT` para impedir forjamento pelo cliente), `consent_text_version` (`text not null`, 1–64 caracteres), `utm_source` e `utm_campaign` (limitados a 120 caracteres), `opted_out_at` (`timestamptz null`, preenchido apenas pelo admin) e `created_at` (`timestamptz not null default now()`).
   - **RLS ativa e forçada** (`ENABLE ROW LEVEL SECURITY` + `FORCE ROW LEVEL SECURITY`).
-  - **Menor privilégio para `anon`**: `REVOKE ALL` na tabela e `GRANT INSERT` apenas nas colunas do formulário (`nome`, `whatsapp_e164`, `interesse`, `consent_at`, `consent_text_version`, `utm_source`, `utm_campaign`). O papel `anon` não tem `SELECT`, `UPDATE` nem `DELETE`, e não consegue definir `id`, `created_at` ou `opted_out_at`.
-  - **Policies**:
-    - `INSERT` para `anon` e `authenticated` exigindo `consent_at is not null`, `consent_text_version` não vazio e `opted_out_at is null`.
-    - `SELECT`, `UPDATE` e `DELETE` restritos exclusivamente a `authenticated` com `(auth.jwt() ->> 'email') = 'alandiogor@gmail.com'`.
+  - **Cadastro via RPC (`public.vip_lead_signup`)**: o papel `anon` não possui nenhum privilégio na tabela `public.vip_leads` (nem `INSERT` direto). O cadastro público é feito exclusivamente pela RPC `public.vip_lead_signup(p_nome, p_whatsapp_e164, p_interesse, p_consent_text_version, p_utm_source, p_utm_campaign)` via `POST /rest/v1/rpc/vip_lead_signup` (`SECURITY DEFINER`, `SET search_path = public, pg_temp`, `REVOKE ALL FROM public` e `GRANT EXECUTE` apenas para `anon` e `authenticated`), que valida os campos com as mesmas regras dos `CHECK`s, executa `INSERT ... ON CONFLICT (whatsapp_e164) DO NOTHING` e retorna sempre `void` (mesma resposta para números novos ou duplicados, sem expor `id` e sem limpar `opted_out_at` em caso de recadastro).
+  - **Proteção anti-abuso**: rate limit e captcha (Cloudflare Turnstile) ficam para o PR3.
+  - **Policies de admin**: `SELECT`, `UPDATE` e `DELETE` restritos exclusivamente a `authenticated` com `(auth.jwt() ->> 'email') = 'alandiogor@gmail.com'`, `(auth.jwt() ->> 'email_verified')::boolean = true` e `coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false` (sem consultar `user_metadata`).
 
 ### Variáveis no Netlify
 

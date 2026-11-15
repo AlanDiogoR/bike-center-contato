@@ -1,12 +1,14 @@
--- Migration: cria a tabela public.vip_leads com RLS forçada e privilégios mínimos.
--- Admin único autorizado para leitura/gestão: alandiogor@gmail.com.
+-- Migration: cria a tabela public.vip_leads com RLS forçada, privilégios mínimos
+-- e RPC public.vip_lead_signup (SECURITY DEFINER) sem vazar duplicados.
+-- Admin único autorizado para leitura/gestão: alandiogor@gmail.com
+-- (com email_verified = true e is_anonymous = false, sem usar user_metadata).
 
-create table public.vip_leads (
+create table if not exists public.vip_leads (
   id uuid primary key default gen_random_uuid(),
   nome text not null check (char_length(btrim(nome)) between 1 and 80 and char_length(nome) <= 80),
   whatsapp_e164 text not null check (whatsapp_e164 ~ '^\+55[1-9][0-9]{9,10}$'),
   interesse text not null check (interesse in ('moto', 'bike', 'ambos')),
-  consent_at timestamptz not null,
+  consent_at timestamptz not null default now(),
   consent_text_version text not null check (
     char_length(btrim(consent_text_version)) between 1 and 64
     and char_length(consent_text_version) <= 64
@@ -18,78 +20,172 @@ create table public.vip_leads (
 );
 
 -- Índice único no WhatsApp normalizado em E.164 (+55DD9XXXXXXXX ou +55DDXXXXXXXX).
-create unique index vip_leads_whatsapp_e164_key on public.vip_leads (whatsapp_e164);
+create unique index if not exists vip_leads_whatsapp_e164_key on public.vip_leads (whatsapp_e164);
+
+-- Trigger BEFORE INSERT: força consent_at = now() e created_at = now() no servidor,
+-- tornando impossível forjar a data/hora de consentimento mesmo em INSERT direto.
+create or replace function public.vip_leads_force_consent_at()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  new.consent_at := now();
+  new.created_at := now();
+  return new;
+end;
+$$;
+
+revoke all on function public.vip_leads_force_consent_at() from public, anon, authenticated;
+
+drop trigger if exists trg_vip_leads_force_consent_at on public.vip_leads;
+create trigger trg_vip_leads_force_consent_at
+  before insert on public.vip_leads
+  for each row
+  execute function public.vip_leads_force_consent_at();
 
 -- Ativa e força Row Level Security (inclusive para o dono da tabela).
 alter table public.vip_leads enable row level security;
 alter table public.vip_leads force row level security;
 
 -- Revoga todos os privilégios herdados de default privileges para aplicar menor privilégio.
+-- O papel anon não recebe nenhum privilégio na tabela (cadastro ocorre exclusivamente via RPC).
 revoke all on table public.vip_leads from public, anon, authenticated;
 
--- Papel anon só pode inserir nas colunas permitidas do formulário público;
--- não pode ler nada nem definir id, created_at ou opted_out_at.
-grant insert (
-  nome,
-  whatsapp_e164,
-  interesse,
-  consent_at,
-  consent_text_version,
-  utm_source,
-  utm_campaign
-) on table public.vip_leads to anon;
+-- Papel authenticated possui apenas os comandos DML de gestão do painel admin
+-- (filtrados pelas policies de RLS abaixo), sem INSERT direto, TRUNCATE, REFERENCES ou TRIGGER.
+grant select, update, delete on table public.vip_leads to authenticated;
 
--- Papel authenticated possui apenas os comandos DML necessários para o painel admin
--- (filtrados pelas policies de RLS abaixo), sem TRUNCATE, REFERENCES ou TRIGGER.
-grant select, insert, update, delete on table public.vip_leads to authenticated;
+-- RPC de cadastro público: valida os campos com as mesmas regras dos CHECKs,
+-- registra consent_at = now(), faz INSERT ... ON CONFLICT (whatsapp_e164) DO NOTHING
+-- e devolve sempre void (sem expor id nem revelar se o número já existia ou se havia opt-out).
+create or replace function public.vip_lead_signup(
+  p_nome text,
+  p_whatsapp_e164 text,
+  p_interesse text,
+  p_consent_text_version text,
+  p_utm_source text default null,
+  p_utm_campaign text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if p_nome is null
+     or char_length(btrim(p_nome)) not between 1 and 80
+     or char_length(p_nome) > 80
+  then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
 
--- Policy de INSERT: permite que visitantes anônimos (anon) e sessões autenticadas
--- cadastrem um lead somente com consentimento LGPD registrado (consent_at e
--- consent_text_version preenchidos) e sem opt-out prévio (opted_out_at is null).
-create policy vip_leads_insert_consent
-  on public.vip_leads
-  for insert
-  to anon, authenticated
-  with check (
-    consent_at is not null
-    and consent_text_version is not null
-    and char_length(btrim(consent_text_version)) > 0
-    and opted_out_at is null
-  );
+  if p_whatsapp_e164 is null
+     or p_whatsapp_e164 !~ '^\+55[1-9][0-9]{9,10}$'
+  then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
 
-comment on policy vip_leads_insert_consent on public.vip_leads is
-  'Permite INSERT por anon e authenticated apenas com consent_at e consent_text_version preenchidos e opted_out_at nulo.';
+  if p_interesse is null
+     or p_interesse not in ('moto', 'bike', 'ambos')
+  then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
+
+  if p_consent_text_version is null
+     or char_length(btrim(p_consent_text_version)) not between 1 and 64
+     or char_length(p_consent_text_version) > 64
+  then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
+
+  if p_utm_source is not null and char_length(p_utm_source) > 120 then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
+
+  if p_utm_campaign is not null and char_length(p_utm_campaign) > 120 then
+    raise exception 'Dados de cadastro inválidos.' using errcode = '22023';
+  end if;
+
+  insert into public.vip_leads (
+    nome,
+    whatsapp_e164,
+    interesse,
+    consent_at,
+    consent_text_version,
+    utm_source,
+    utm_campaign
+  ) values (
+    p_nome,
+    p_whatsapp_e164,
+    p_interesse,
+    now(),
+    p_consent_text_version,
+    p_utm_source,
+    p_utm_campaign
+  )
+  on conflict (whatsapp_e164) do nothing;
+end;
+$$;
+
+revoke all on function public.vip_lead_signup(text, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.vip_lead_signup(text, text, text, text, text, text) to anon, authenticated;
+
+comment on function public.vip_lead_signup(text, text, text, text, text, text) is
+  'Cadastra lead VIP validando os campos, forçando consent_at = now() e ignorando duplicados sem vazar existência prévia nem expor id.';
+
+-- Remove policy de insert legada caso exista.
+drop policy if exists vip_leads_insert_consent on public.vip_leads;
 
 -- Policy de SELECT: somente o administrador autenticado (alandiogor@gmail.com)
--- pode ler os leads. Nenhum SELECT é concedido a anon ou a outros e-mails.
+-- com e-mail verificado e sessão não anônima pode ler os leads (sem consultar user_metadata).
+drop policy if exists vip_leads_admin_select on public.vip_leads;
 create policy vip_leads_admin_select
   on public.vip_leads
   for select
   to authenticated
-  using ((auth.jwt() ->> 'email') = 'alandiogor@gmail.com');
+  using (
+    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
+    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
+    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  );
 
 comment on policy vip_leads_admin_select on public.vip_leads is
-  'Restringe SELECT na tabela vip_leads exclusivamente ao usuário autenticado com e-mail alandiogor@gmail.com.';
+  'Restringe SELECT na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';
 
 -- Policy de UPDATE: somente o administrador autenticado (alandiogor@gmail.com)
--- pode atualizar registros (ex.: preencher opted_out_at em pedido de descadastro).
+-- com e-mail verificado e sessão não anônima pode atualizar registros (ex.: preencher opted_out_at).
+drop policy if exists vip_leads_admin_update on public.vip_leads;
 create policy vip_leads_admin_update
   on public.vip_leads
   for update
   to authenticated
-  using ((auth.jwt() ->> 'email') = 'alandiogor@gmail.com')
-  with check ((auth.jwt() ->> 'email') = 'alandiogor@gmail.com');
+  using (
+    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
+    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
+    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  )
+  with check (
+    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
+    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
+    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  );
 
 comment on policy vip_leads_admin_update on public.vip_leads is
-  'Restringe UPDATE na tabela vip_leads exclusivamente ao usuário autenticado com e-mail alandiogor@gmail.com.';
+  'Restringe UPDATE na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';
 
 -- Policy de DELETE: somente o administrador autenticado (alandiogor@gmail.com)
--- pode remover registros da tabela.
+-- com e-mail verificado e sessão não anônima pode remover registros da tabela.
+drop policy if exists vip_leads_admin_delete on public.vip_leads;
 create policy vip_leads_admin_delete
   on public.vip_leads
   for delete
   to authenticated
-  using ((auth.jwt() ->> 'email') = 'alandiogor@gmail.com');
+  using (
+    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
+    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
+    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  );
 
 comment on policy vip_leads_admin_delete on public.vip_leads is
-  'Restringe DELETE na tabela vip_leads exclusivamente ao usuário autenticado com e-mail alandiogor@gmail.com.';
+  'Restringe DELETE na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';

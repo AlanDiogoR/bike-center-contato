@@ -9,11 +9,14 @@ grant usage on schema auth to anon, authenticated, service_role;
 create table auth.users (
   id uuid primary key,
   email text,
+  email_confirmed_at timestamptz,
   raw_user_meta_data jsonb,
   raw_app_meta_data jsonb,
+  is_anonymous boolean default false,
   created_at timestamptz default now()
 );
 
+-- Expondo todos os claims do JWT (incluindo email, email_verified e is_anonymous).
 create function auth.jwt() returns jsonb language sql stable as $$
   select coalesce(
     nullif(current_setting('request.jwt.claims', true), '')::jsonb,

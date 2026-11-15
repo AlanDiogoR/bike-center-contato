@@ -4,19 +4,26 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
-function acharBin(): string | null {
-  if (
-    process.env.PG_BIN &&
-    existsSync(path.join(process.env.PG_BIN, "initdb"))
-  ) {
-    return process.env.PG_BIN;
+export function acharBin(
+  env: NodeJS.ProcessEnv = process.env,
+  base = "/usr/lib/postgresql",
+): string | null {
+  if (env.PG_BIN && existsSync(path.join(env.PG_BIN, "initdb"))) {
+    return env.PG_BIN;
   }
-  const base = "/usr/lib/postgresql";
   if (!existsSync(base)) return null;
   const versao = readdirSync(base)
     .sort((a, b) => Number(b) - Number(a) || b.localeCompare(a))
     .find((v) => existsSync(path.join(base, v, "bin", "initdb")));
   return versao ? path.join(base, versao, "bin") : null;
+}
+
+export function devePularPg(
+  binPath: string | null,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const emCI = Boolean(env.CI && env.CI !== "0" && env.CI !== "false");
+  return !binPath && !emCI;
 }
 
 const bin = acharBin();
@@ -31,494 +38,676 @@ type ResultadoPsql = ReturnType<typeof spawnSync> & {
   stderr: string;
 };
 
-describe.skipIf(!bin)("vip_leads — RLS e constraints em Postgres 17 real", () => {
-  let dir = "";
-  let porta = "";
+type OpcoesAuth = {
+  uid?: string;
+  emailVerified?: boolean | null;
+  isAnonymous?: boolean | null;
+  extraClaims?: Record<string, unknown>;
+};
 
-  const psqlBase = () => [
-    "-h",
-    dir,
-    "-p",
-    porta,
-    "-U",
-    "postgres",
-    "-X",
-    "-q",
-    "-v",
-    "ON_ERROR_STOP=1",
-    "-d",
-    "postgres",
-  ];
-
-  const psql = (sql: string) =>
-    spawnSync(path.join(bin!, "psql"), [...psqlBase(), "-At", "-c", sql], {
-      encoding: "utf8",
-    }) as ResultadoPsql;
-
-  const comoAnon = (sql: string) =>
-    psql(
-      `begin; set local role anon; set local request.jwt.claim.role = 'anon'; set local request.jwt.claims = '{"role":"anon"}'; ${sql}; commit;`,
+describe("guarda de CI para binários do PostgreSQL", () => {
+  test("não pula quando CI está setado mesmo sem binário (força falha no CI)", () => {
+    expect(devePularPg(null, { NODE_ENV: "test", CI: "true" })).toBe(false);
+    expect(devePularPg(null, { NODE_ENV: "test", CI: "1" })).toBe(false);
+    expect(devePularPg(null, { NODE_ENV: "test" })).toBe(true);
+    expect(devePularPg("/usr/lib/postgresql/17/bin", { NODE_ENV: "test" })).toBe(
+      false,
     );
-
-  const comoAuth = (email: string, sql: string, uid = ADMIN_UID) =>
-    psql(
-      `begin; set local role authenticated; set local request.jwt.claim.sub = '${uid}'; set local request.jwt.claim.role = 'authenticated'; set local request.jwt.claims = '${JSON.stringify({ sub: uid, email, role: "authenticated" })}'; ${sql}; commit;`,
-    );
-
-  const ok = (r: ResultadoPsql) => {
-    expect(r.status, r.stderr).toBe(0);
-  };
-
-  const negado = (r: ResultadoPsql, padrao: RegExp) => {
-    expect(r.status).not.toBe(0);
-    expect(r.stderr).toMatch(padrao);
-  };
-
-  const valor = (r: ResultadoPsql) => {
-    ok(r);
-    return r.stdout.trim();
-  };
-
-  beforeAll(() => {
-    dir = mkdtempSync(path.join(tmpdir(), "bcc-vip-leads-"));
-    porta = String(50000 + Math.floor(Math.random() * 5000));
-    execFileSync(
-      path.join(bin!, "initdb"),
-      ["-D", path.join(dir, "data"), "-U", "postgres", "-A", "trust"],
-      { stdio: "pipe" },
-    );
-    execFileSync(
-      path.join(bin!, "pg_ctl"),
-      [
-        "-D",
-        path.join(dir, "data"),
-        "-w",
-        "-o",
-        `-p ${porta} -k ${dir} -c listen_addresses=''`,
-        "-l",
-        path.join(dir, "log"),
-        "start",
-      ],
-      { stdio: "pipe" },
-    );
-
-    const rodarArquivo = (arquivo: string) =>
-      execFileSync(path.join(bin!, "psql"), [...psqlBase(), "-f", arquivo], {
-        stdio: "pipe",
-      });
-
-    rodarArquivo(path.join(raiz, "tests/sql/supabase-stub.sql"));
-    const pastaMigrations = path.join(raiz, "supabase/migrations");
-    for (const f of readdirSync(pastaMigrations)
-      .filter((nome) => nome.endsWith(".sql"))
-      .sort()) {
-      rodarArquivo(path.join(pastaMigrations, f));
-    }
   });
+});
 
-  afterAll(() => {
-    if (bin && dir) {
-      spawnSync(path.join(bin, "pg_ctl"), [
-        "-D",
-        path.join(dir, "data"),
-        "-m",
-        "immediate",
-        "stop",
-      ]);
-    }
-    if (dir) {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
+describe.skipIf(devePularPg(bin))(
+  "vip_leads — RLS, RPC e constraints em Postgres 17 real",
+  () => {
+    let dir = "";
+    let porta = "";
 
-  test("o Postgres local executando os testes está ativo (14+)", () => {
-    expect(valor(psql("show server_version"))).toMatch(/^(1[4-9]|[2-9][0-9])\./);
-  });
+    const psqlBase = () => [
+      "-h",
+      dir,
+      "-p",
+      porta,
+      "-U",
+      "postgres",
+      "-X",
+      "-q",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-d",
+      "postgres",
+    ];
 
-  test("RLS enable + force ligada, índice único em whatsapp_e164 e policies documentadas", () => {
-    expect(
-      valor(
-        psql(
-          "select relrowsecurity::text || ':' || relforcerowsecurity::text from pg_class where oid = 'public.vip_leads'::regclass",
-        ),
-      ),
-    ).toBe("true:true");
+    const psql = (sql: string) =>
+      spawnSync(path.join(bin!, "psql"), [...psqlBase(), "-At", "-c", sql], {
+        encoding: "utf8",
+      }) as ResultadoPsql;
 
-    expect(
-      valor(
-        psql(
-          "select indisunique::text from pg_index where indexrelid = 'public.vip_leads_whatsapp_e164_key'::regclass",
-        ),
-      ),
-    ).toBe("true");
-
-    const policies = valor(
+    const comoAnon = (sql: string) =>
       psql(
-        "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
-      ),
-    );
-    expect(policies).toBe("4");
+        `begin; set local role anon; set local request.jwt.claim.role = 'anon'; set local request.jwt.claims = '{"role":"anon"}'; ${sql}; commit;`,
+      );
 
-    const selectRoles = valor(
-      psql(
-        "select array_to_string(roles, ',') from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and cmd = 'SELECT'",
-      ),
-    );
-    expect(selectRoles).toBe("authenticated");
+    const comoAuth = (
+      email: string,
+      sql: string,
+      opcoes: OpcoesAuth | string = {},
+    ) => {
+      const opts: OpcoesAuth =
+        typeof opcoes === "string" ? { uid: opcoes } : opcoes;
+      const uid = opts.uid ?? ADMIN_UID;
+      const emailVerified =
+        opts.emailVerified === undefined ? true : opts.emailVerified;
+      const isAnonymous =
+        opts.isAnonymous === undefined ? false : opts.isAnonymous;
+      const claims: Record<string, unknown> = {
+        sub: uid,
+        email,
+        role: "authenticated",
+        ...(emailVerified !== null ? { email_verified: emailVerified } : {}),
+        ...(isAnonymous !== null ? { is_anonymous: isAnonymous } : {}),
+        ...(opts.extraClaims ?? {}),
+      };
+      const jsonClaims = JSON.stringify(claims).replace(/'/g, "''");
+      return psql(
+        `begin; set local role authenticated; set local request.jwt.claim.sub = '${uid}'; set local request.jwt.claim.role = 'authenticated'; set local request.jwt.claims = '${jsonClaims}'; ${sql}; commit;`,
+      );
+    };
 
-    const privsTabelaAnon = valor(
-      psql(
-        "select coalesce(string_agg(privilege_type, ',' order by privilege_type), '') from information_schema.role_table_grants where table_schema = 'public' and table_name = 'vip_leads' and grantee = 'anon'",
-      ),
-    );
-    expect(privsTabelaAnon).toBe("");
+    const ok = (r: ResultadoPsql) => {
+      expect(r.status, r.stderr).toBe(0);
+    };
 
-    const colsInsertAnon = valor(
-      psql(
-        "select coalesce(string_agg(column_name || ':' || privilege_type, ',' order by column_name), '') from information_schema.column_privileges where table_schema = 'public' and table_name = 'vip_leads' and grantee = 'anon'",
-      ),
-    );
-    expect(colsInsertAnon).toBe(
-      "consent_at:INSERT,consent_text_version:INSERT,interesse:INSERT,nome:INSERT,utm_campaign:INSERT,utm_source:INSERT,whatsapp_e164:INSERT",
-    );
+    const negado = (r: ResultadoPsql, padrao: RegExp) => {
+      expect(r.status).not.toBe(0);
+      expect(r.stderr).toMatch(padrao);
+    };
 
-    for (const priv of ["TRUNCATE", "REFERENCES", "TRIGGER"]) {
+    const valor = (r: ResultadoPsql) => {
+      ok(r);
+      return r.stdout.trim();
+    };
+
+    beforeAll(() => {
+      if (!bin) {
+        throw new Error(
+          "Binários do PostgreSQL (initdb/pg_ctl/psql) não encontrados no ambiente de CI.",
+        );
+      }
+      dir = mkdtempSync(path.join(tmpdir(), "bcc-vip-leads-"));
+      porta = String(50000 + Math.floor(Math.random() * 5000));
+      execFileSync(
+        path.join(bin, "initdb"),
+        ["-D", path.join(dir, "data"), "-U", "postgres", "-A", "trust"],
+        { stdio: "pipe" },
+      );
+      execFileSync(
+        path.join(bin, "pg_ctl"),
+        [
+          "-D",
+          path.join(dir, "data"),
+          "-w",
+          "-o",
+          `-p ${porta} -k ${dir} -c listen_addresses=''`,
+          "-l",
+          path.join(dir, "log"),
+          "start",
+        ],
+        { stdio: "pipe" },
+      );
+
+      const rodarArquivo = (arquivo: string) =>
+        execFileSync(path.join(bin, "psql"), [...psqlBase(), "-f", arquivo], {
+          stdio: "pipe",
+        });
+
+      rodarArquivo(path.join(raiz, "tests/sql/supabase-stub.sql"));
+      const pastaMigrations = path.join(raiz, "supabase/migrations");
+      const arquivos = readdirSync(pastaMigrations)
+        .filter((nome) => nome.endsWith(".sql"))
+        .sort();
+      // Roda 2x para garantir idempotência das migrations
+      for (const f of arquivos) {
+        rodarArquivo(path.join(pastaMigrations, f));
+      }
+      for (const f of arquivos) {
+        rodarArquivo(path.join(pastaMigrations, f));
+      }
+    });
+
+    afterAll(() => {
+      if (bin && dir) {
+        spawnSync(path.join(bin, "pg_ctl"), [
+          "-D",
+          path.join(dir, "data"),
+          "-m",
+          "immediate",
+          "stop",
+        ]);
+      }
+      if (dir) {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test("o Postgres local executando os testes está ativo (14+)", () => {
+      expect(valor(psql("show server_version"))).toMatch(
+        /^(1[4-9]|[2-9][0-9])\./,
+      );
+    });
+
+    test("RLS enable + force ligada, índice único, policies sem user_metadata e privilégios mínimos da tabela e RPC", () => {
       expect(
         valor(
           psql(
-            `select has_table_privilege('authenticated', 'public.vip_leads', '${priv}')`,
+            "select relrowsecurity::text || ':' || relforcerowsecurity::text from pg_class where oid = 'public.vip_leads'::regclass",
           ),
         ),
-      ).toBe("f");
-    }
-  });
+      ).toBe("true:true");
 
-  test("anon INSERT válido funciona e anon não pode setar id, created_at nem opted_out_at", () => {
-    ok(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version, utm_source, utm_campaign
-        ) values (
-          'Maria Silva', '+5514998765432', 'bike', now(), 'v1', 'placa', 'balcao'
+      expect(
+        valor(
+          psql(
+            "select indisunique::text from pg_index where indexrelid = 'public.vip_leads_whatsapp_e164_key'::regclass",
+          ),
+        ),
+      ).toBe("true");
+
+      const policies = valor(
+        psql(
+          "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
+        ),
+      );
+      expect(policies).toBe("3");
+
+      const cmdsPolicies = valor(
+        psql(
+          "select string_agg(cmd || ':' || array_to_string(roles, ','), '|' order by cmd) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
+        ),
+      );
+      expect(cmdsPolicies).toBe(
+        "DELETE:authenticated|SELECT:authenticated|UPDATE:authenticated",
+      );
+
+      // Nenhuma policy pode usar user_metadata (editável pelo usuário no Supabase)
+      const usaUserMetadata = valor(
+        psql(
+          "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and (coalesce(qual, '') ilike '%user_metadata%' or coalesce(with_check, '') ilike '%user_metadata%')",
+        ),
+      );
+      expect(usaUserMetadata).toBe("0");
+
+      // anon não tem nenhum privilégio na tabela nem em colunas
+      const privsTabelaAnon = valor(
+        psql(
+          "select coalesce(string_agg(privilege_type, ',' order by privilege_type), '') from information_schema.role_table_grants where table_schema = 'public' and table_name = 'vip_leads' and grantee = 'anon'",
+        ),
+      );
+      expect(privsTabelaAnon).toBe("");
+
+      const colsAnon = valor(
+        psql(
+          "select coalesce(string_agg(column_name || ':' || privilege_type, ',' order by column_name), '') from information_schema.column_privileges where table_schema = 'public' and table_name = 'vip_leads' and grantee = 'anon'",
+        ),
+      );
+      expect(colsAnon).toBe("");
+
+      for (const priv of ["INSERT", "TRUNCATE", "REFERENCES", "TRIGGER"]) {
+        expect(
+          valor(
+            psql(
+              `select has_table_privilege('authenticated', 'public.vip_leads', '${priv}')`,
+            ),
+          ),
+        ).toBe("f");
+      }
+
+      // Exatamente UMA função em public executável por anon, SECURITY DEFINER, search_path fixo, retorno void e PUBLIC revogado
+      const fnsAnon = valor(
+        psql(
+          "select string_agg(p.oid::regprocedure::text, '|') from pg_proc p where p.pronamespace = 'public'::regnamespace and has_function_privilege('anon', p.oid, 'execute')",
+        ),
+      );
+      expect(fnsAnon).toBe(
+        "vip_lead_signup(text,text,text,text,text,text)",
+      );
+
+      const rpcMeta = valor(
+        psql(
+          "select p.prosecdef::text || ':' || pg_get_function_result(p.oid) || ':' || coalesce(array_to_string(p.proconfig, ';'), '') from pg_proc p where p.oid = 'public.vip_lead_signup(text,text,text,text,text,text)'::regprocedure",
+        ),
+      );
+      expect(rpcMeta).toBe("true:void:search_path=public, pg_temp");
+
+      const publicExec = valor(
+        psql(
+          "select exists(select 1 from aclexplode((select proacl from pg_proc where oid = 'public.vip_lead_signup(text,text,text,text,text,text)'::regprocedure)) a where a.grantee = 0)::text",
+        ),
+      );
+      expect(publicExec).toBe("false");
+    });
+
+    test("cadastro via RPC vip_lead_signup funciona e duplicado não vaza (devolve exatamente a mesma resposta e não muda a linha)", () => {
+      const r1 = comoAnon(`
+        select public.vip_lead_signup(
+          'Maria Silva', '+5514998765432', 'bike', 'v1', 'placa', 'balcao'
         )
-      `),
-    );
+      `);
+      ok(r1);
 
-    ok(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          'João Souza', '+551433812345', 'ambos', now(), 'v1'
+      const r2 = comoAnon(`
+        select public.vip_lead_signup(
+          'João Souza', '+551433812345', 'ambos', 'v1'
         )
-      `),
-    );
+      `);
+      ok(r2);
 
-    expect(valor(psql("select count(*) from public.vip_leads"))).toBe("2");
+      expect(valor(psql("select count(*) from public.vip_leads"))).toBe("2");
 
-    // Duplicidade em whatsapp_e164 deve falhar pelo índice único.
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          'Maria Duplicada', '+5514998765432', 'moto', now(), 'v1'
+      const estadoAntes = valor(
+        psql(
+          "select id::text || '|' || nome || '|' || interesse || '|' || consent_at::text || '|' || consent_text_version || '|' || coalesce(utm_source, '') || '|' || coalesce(utm_campaign, '') || '|' || created_at::text from public.vip_leads where whatsapp_e164 = '+5514998765432'",
+        ),
+      );
+
+      // 2ª chamada da RPC com mesmo número devolve exatamente a mesma resposta (void / sem id) e não muda a linha:
+      const rDuplicado = comoAnon(`
+        select public.vip_lead_signup(
+          'Maria Tentando Sobrescrever', '+5514998765432', 'moto', 'v2', 'outro_src', 'outra_camp'
         )
-      `),
-      /duplicate key value violates unique constraint "vip_leads_whatsapp_e164_key"/,
-    );
+      `);
+      ok(rDuplicado);
+      expect(rDuplicado.stdout).toBe(r1.stdout);
+      expect(rDuplicado.stdout.trim()).toBe("");
 
-    // anon não pode setar id, created_at nem opted_out_at.
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          id, nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          '33333333-3333-4333-8333-333333333333', 'Teste ID', '+5514991112222', 'moto', now(), 'v1'
-        )
-      `),
-      /permission denied for table vip_leads/,
-    );
+      const estadoDepois = valor(
+        psql(
+          "select id::text || '|' || nome || '|' || interesse || '|' || consent_at::text || '|' || consent_text_version || '|' || coalesce(utm_source, '') || '|' || coalesce(utm_campaign, '') || '|' || created_at::text from public.vip_leads where whatsapp_e164 = '+5514998765432'",
+        ),
+      );
+      expect(estadoDepois).toBe(estadoAntes);
+      expect(valor(psql("select count(*) from public.vip_leads"))).toBe("2");
+    });
 
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version, created_at
-        ) values (
-          'Teste Data', '+5514991112222', 'moto', now(), 'v1', now() - interval '10 days'
-        )
-      `),
-      /permission denied for table vip_leads/,
-    );
+    test("anon não faz INSERT direto na tabela nem SELECT, UPDATE ou DELETE (erro de permissão)", () => {
+      negado(
+        comoAnon(`
+          insert into public.vip_leads (
+            nome, whatsapp_e164, interesse, consent_text_version
+          ) values (
+            'Insert Direto Anon', '+5514991112222', 'moto', 'v1'
+          )
+        `),
+        /permission denied for table vip_leads/,
+      );
 
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version, opted_out_at
-        ) values (
-          'Teste OptOut', '+5514991112222', 'moto', now(), 'v1', now()
-        )
-      `),
-      /permission denied for table vip_leads/,
-    );
+      negado(
+        comoAnon(`
+          insert into public.vip_leads (
+            id, nome, whatsapp_e164, interesse, consent_at, consent_text_version
+          ) values (
+            '33333333-3333-4333-8333-333333333333', 'Teste ID', '+5514991112222', 'moto', now(), 'v1'
+          )
+        `),
+        /permission denied for table vip_leads/,
+      );
 
-    // Mesmo para authenticated (que tem INSERT na tabela), inserir já com opted_out_at preenchido falha na RLS.
-    negado(
-      comoAuth(
-        ADMIN_EMAIL,
-        `
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version, opted_out_at
-        ) values (
-          'Teste OptOut RLS', '+5514991112222', 'moto', now(), 'v1', now()
-        )
-      `,
-      ),
-      /new row violates row-level security policy for table "vip_leads"/,
-    );
-  });
+      negado(
+        comoAnon("select * from public.vip_leads"),
+        /permission denied for table vip_leads/,
+      );
 
-  test("anon SELECT retorna erro de permissão e 0 linhas na camada de RLS", () => {
-    // 1) Sem privilégio de SELECT, anon recebe erro imediato de permissão:
-    negado(
-      comoAnon("select * from public.vip_leads"),
-      /permission denied for table vip_leads/,
-    );
+      // Mesmo se SELECT fosse concedido na tabela (em transação com rollback), RLS retorna 0 linhas para anon:
+      expect(
+        valor(
+          psql(`
+            begin;
+            grant select on table public.vip_leads to anon;
+            set local role anon;
+            set local request.jwt.claims = '{"role":"anon"}';
+            select count(*) from public.vip_leads;
+            rollback;
+          `),
+        ),
+      ).toBe("0");
 
-    // 2) Mesmo se o privilégio de SELECT existisse (testado em transação com rollback),
-    // a ausência de policy SELECT para anon faz retornar 0 linhas:
-    expect(
-      valor(
+      negado(
+        comoAnon("update public.vip_leads set nome = 'Invadido'"),
+        /permission denied for table vip_leads/,
+      );
+      negado(
+        comoAnon("delete from public.vip_leads"),
+        /permission denied for table vip_leads/,
+      );
+    });
+
+    test("consent_at forjado é ignorado (RPC não aceita consent_at e INSERT direto grava sempre now())", () => {
+      // 1) A RPC não possui parâmetro para consent_at: tentar passar um 7º argumento falha
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'Forjado RPC', '+5514991113333', 'moto', 'v1', 'placa', 'balcao', '2000-01-01T00:00:00Z'::timestamptz
+          )
+        `),
+        /function public\.vip_lead_signup\(.*\) does not exist/,
+      );
+
+      // 2) Ao cadastrar via RPC, consent_at gravado no banco é exatamente o now() da transação
+      expect(
+        valor(
+          psql(`
+            begin;
+            set local role anon;
+            set local request.jwt.claims = '{"role":"anon"}';
+            select public.vip_lead_signup('Data Servidor RPC', '+5514991114444', 'bike', 'v1', null, null);
+            reset role;
+            select (consent_at = now() and created_at = now())::text
+              from public.vip_leads
+             where whatsapp_e164 = '+5514991114444';
+            rollback;
+          `),
+        ),
+      ).toContain("true");
+
+      // 3) Mesmo em INSERT direto (ex.: service_role) tentando forjar consent_at no passado ou no futuro,
+      // o trigger BEFORE INSERT ignora o valor forjado e grava exatamente now():
+      expect(
+        valor(
+          psql(`
+            begin;
+            set local role service_role;
+            insert into public.vip_leads (
+              nome, whatsapp_e164, interesse, consent_at, consent_text_version, created_at
+            ) values (
+              'Forjado Passado', '+5514991115555', 'moto', '1999-01-01 00:00:00+00'::timestamptz, 'v1', '1999-01-01 00:00:00+00'::timestamptz
+            );
+            insert into public.vip_leads (
+              nome, whatsapp_e164, interesse, consent_at, consent_text_version, created_at
+            ) values (
+              'Forjado Futuro', '+5514991116666', 'bike', now() + interval '365 days', 'v1', now() + interval '365 days'
+            );
+            select count(*)::text
+              from public.vip_leads
+             where whatsapp_e164 in ('+5514991115555', '+5514991116666')
+               and consent_at = now()
+               and created_at = now();
+            rollback;
+          `),
+        ),
+      ).toBe("2");
+    });
+
+    test("RPC vip_lead_signup e constraints rejeitam consent_text_version nulo/vazio e campos inválidos", () => {
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'Sem Versao', '+5514991234567', 'moto', null
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'Versao Vazia', '+5514991234567', 'moto', '   '
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'Versao Longa', '+5514991234567', 'moto', repeat('v', 65)
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      for (const foneInvalido of [
+        "14998765432",
+        "+5504998765432",
+        "+55149987654",
+        "+55149987654321",
+        "+15551234567",
+        "+551499876543a",
+      ]) {
+        negado(
+          comoAnon(`
+            select public.vip_lead_signup(
+              'Fone Invalido', '${foneInvalido}', 'moto', 'v1'
+            )
+          `),
+          /Dados de cadastro inválidos/,
+        );
+      }
+
+      for (const interesseInvalido of ["carro", "MOTO", "todos", ""]) {
+        negado(
+          comoAnon(`
+            select public.vip_lead_signup(
+              'Interesse Invalido', '+5514992223333', '${interesseInvalido}', 'v1'
+            )
+          `),
+          /Dados de cadastro inválidos/,
+        );
+      }
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            '   ', '+5514992223333', 'moto', 'v1'
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            repeat('A', 81), '+5514992223333', 'moto', 'v1'
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'UTM Source Grande', '+5514992223333', 'moto', 'v1', repeat('s', 121), null
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      negado(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'UTM Campaign Grande', '+5514992223333', 'moto', 'v1', null, repeat('x', 121)
+          )
+        `),
+        /Dados de cadastro inválidos/,
+      );
+
+      // Defesa em profundidade na tabela mesmo em service_role:
+      negado(
         psql(`
           begin;
-          grant select on table public.vip_leads to anon;
-          set local role anon;
-          set local request.jwt.claims = '{"role":"anon"}';
-          select count(*) from public.vip_leads;
-          rollback;
-        `),
-      ),
-    ).toBe("0");
-
-    // E anon não pode atualizar nem apagar:
-    negado(
-      comoAnon("update public.vip_leads set nome = 'Invadido'"),
-      /permission denied for table vip_leads/,
-    );
-    negado(
-      comoAnon("delete from public.vip_leads"),
-      /permission denied for table vip_leads/,
-    );
-  });
-
-  test("anon INSERT sem consent_at ou sem consent_text_version falha na RLS (e no NOT NULL/CHECK mesmo em service_role)", () => {
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_text_version
-        ) values (
-          'Sem Consent At', '+5514991234567', 'moto', 'v1'
-        )
-      `),
-      /new row violates row-level security policy for table "vip_leads"/,
-    );
-
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          'Sem Consent At Null', '+5514991234567', 'moto', null, 'v1'
-        )
-      `),
-      /new row violates row-level security policy for table "vip_leads"/,
-    );
-
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at
-        ) values (
-          'Sem Versao', '+5514991234567', 'moto', now()
-        )
-      `),
-      /new row violates row-level security policy for table "vip_leads"/,
-    );
-
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          'Versao Vazia', '+5514991234567', 'moto', now(), '   '
-        )
-      `),
-      /new row violates row-level security policy for table "vip_leads"/,
-    );
-
-    // Defesa em profundidade: mesmo em service_role (bypassrls), NOT NULL e CHECK bloqueiam:
-    negado(
-      psql(`
-        begin;
-        set local role service_role;
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_text_version
-        ) values (
-          'Service Sem Consent', '+5514991234567', 'moto', 'v1'
-        );
-        commit;
-      `),
-      /null value in column "consent_at" of relation "vip_leads" violates not-null constraint/,
-    );
-
-    negado(
-      psql(`
-        begin;
-        set local role service_role;
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at
-        ) values (
-          'Service Sem Versao', '+5514991234567', 'moto', now()
-        );
-        commit;
-      `),
-      /null value in column "consent_text_version" of relation "vip_leads" violates not-null constraint/,
-    );
-  });
-
-  test("anon INSERT com whatsapp_e164 inválido, interesse inválido ou nome/utm inválidos falha", () => {
-    for (const foneInvalido of [
-      "14998765432",
-      "+5504998765432",
-      "+55149987654",
-      "+55149987654321",
-      "+15551234567",
-      "+551499876543a",
-    ]) {
-      negado(
-        comoAnon(`
+          set local role service_role;
           insert into public.vip_leads (
-            nome, whatsapp_e164, interesse, consent_at, consent_text_version
+            nome, whatsapp_e164, interesse
           ) values (
-            'Fone Invalido', '${foneInvalido}', 'moto', now(), 'v1'
-          )
+            'Service Sem Versao', '+5514991234567', 'moto'
+          );
+          commit;
         `),
-        /new row for relation "vip_leads" violates check constraint "vip_leads_whatsapp_e164_check"/,
+        /null value in column "consent_text_version" of relation "vip_leads" violates not-null constraint/,
       );
-    }
+    });
 
-    for (const interesseInvalido of ["carro", "MOTO", "todos", ""]) {
-      negado(
-        comoAnon(`
-          insert into public.vip_leads (
-            nome, whatsapp_e164, interesse, consent_at, consent_text_version
-          ) values (
-            'Interesse Invalido', '+5514992223333', '${interesseInvalido}', now(), 'v1'
-          )
-        `),
-        /new row for relation "vip_leads" violates check constraint "vip_leads_interesse_check"/,
-      );
-    }
+    test("authenticated com outro e-mail não vê nada, não atualiza e não apaga", () => {
+      expect(
+        valor(
+          comoAuth(OUTRO_EMAIL, "select count(*) from public.vip_leads", {
+            uid: OUTRO_UID,
+            emailVerified: true,
+            isAnonymous: false,
+          }),
+        ),
+      ).toBe("0");
 
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          '   ', '+5514992223333', 'moto', now(), 'v1'
-        )
-      `),
-      /new row for relation "vip_leads" violates check constraint "vip_leads_nome_check"/,
-    );
-
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version
-        ) values (
-          repeat('A', 81), '+5514992223333', 'moto', now(), 'v1'
-        )
-      `),
-      /new row for relation "vip_leads" violates check constraint "vip_leads_nome_check"/,
-    );
-
-    negado(
-      comoAnon(`
-        insert into public.vip_leads (
-          nome, whatsapp_e164, interesse, consent_at, consent_text_version, utm_campaign
-        ) values (
-          'UTM Grande', '+5514992223333', 'moto', now(), 'v1', repeat('x', 121)
-        )
-      `),
-      /new row for relation "vip_leads" violates check constraint "vip_leads_utm_campaign_check"/,
-    );
-  });
-
-  test("authenticated com outro email não vê nada, não atualiza e não apaga", () => {
-    expect(
-      valor(
+      ok(
         comoAuth(
           OUTRO_EMAIL,
-          "select count(*) from public.vip_leads",
-          OUTRO_UID,
+          "update public.vip_leads set nome = 'Alterado Indevido', opted_out_at = now()",
+          { uid: OUTRO_UID, emailVerified: true, isAnonymous: false },
         ),
-      ),
-    ).toBe("0");
+      );
+      ok(
+        comoAuth(OUTRO_EMAIL, "delete from public.vip_leads", {
+          uid: OUTRO_UID,
+          emailVerified: true,
+          isAnonymous: false,
+        }),
+      );
 
-    ok(
-      comoAuth(
-        OUTRO_EMAIL,
-        "update public.vip_leads set nome = 'Alterado Indevido', opted_out_at = now()",
-        OUTRO_UID,
-      ),
-    );
-    ok(comoAuth(OUTRO_EMAIL, "delete from public.vip_leads", OUTRO_UID));
-
-    // Confirma como superuser que nada foi alterado nem removido:
-    expect(
-      valor(
-        psql(
-          "select count(*) from public.vip_leads where opted_out_at is null and nome in ('Maria Silva', 'João Souza')",
+      expect(
+        valor(
+          psql(
+            "select count(*) from public.vip_leads where opted_out_at is null and nome in ('Maria Silva', 'João Souza')",
+          ),
         ),
-      ),
-    ).toBe("2");
-  });
+      ).toBe("2");
+    });
 
-  test("authenticated com email admin (alandiogor@gmail.com) vê, atualiza e apaga", () => {
-    expect(
-      valor(
+    test("admin com email_verified=false ou is_anonymous=true não vê nada, não atualiza e não apaga", () => {
+      // 1) email_verified = false (mesmo tentando spoofar user_metadata.email_verified = true)
+      expect(
+        valor(
+          comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+            emailVerified: false,
+            isAnonymous: false,
+            extraClaims: {
+              user_metadata: { email: ADMIN_EMAIL, email_verified: true },
+            },
+          }),
+        ),
+      ).toBe("0");
+
+      ok(
         comoAuth(
           ADMIN_EMAIL,
-          "select string_agg(nome, ',' order by nome) from public.vip_leads",
+          "update public.vip_leads set opted_out_at = now()",
+          { emailVerified: false, isAnonymous: false },
         ),
-      ),
-    ).toBe("João Souza,Maria Silva");
+      );
+      ok(
+        comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
+          emailVerified: false,
+          isAnonymous: false,
+        }),
+      );
 
-    ok(
-      comoAuth(
-        ADMIN_EMAIL,
-        "update public.vip_leads set opted_out_at = now() where whatsapp_e164 = '+5514998765432'",
-      ),
-    );
+      // 2) sem claim email_verified (null)
+      expect(
+        valor(
+          comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+            emailVerified: null,
+            isAnonymous: false,
+            extraClaims: {
+              user_metadata: { email: ADMIN_EMAIL, email_verified: true },
+            },
+          }),
+        ),
+      ).toBe("0");
 
-    expect(
-      valor(
+      // 3) is_anonymous = true (mesmo com email_verified = true)
+      expect(
+        valor(
+          comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+            emailVerified: true,
+            isAnonymous: true,
+          }),
+        ),
+      ).toBe("0");
+
+      ok(
         comoAuth(
           ADMIN_EMAIL,
-          "select count(*) from public.vip_leads where opted_out_at is not null and whatsapp_e164 = '+5514998765432'",
+          "update public.vip_leads set opted_out_at = now()",
+          { emailVerified: true, isAnonymous: true },
         ),
-      ),
-    ).toBe("1");
+      );
+      ok(
+        comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
+          emailVerified: true,
+          isAnonymous: true,
+        }),
+      );
 
-    ok(
-      comoAuth(
-        ADMIN_EMAIL,
-        "delete from public.vip_leads where whatsapp_e164 = '+551433812345'",
-      ),
-    );
+      expect(
+        valor(
+          psql(
+            "select count(*) from public.vip_leads where opted_out_at is null and nome in ('Maria Silva', 'João Souza')",
+          ),
+        ),
+      ).toBe("2");
+    });
 
-    expect(
-      valor(comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads")),
-    ).toBe("1");
-  });
-});
+    test("admin verificado (alandiogor@gmail.com, email_verified=true, is_anonymous=false) vê, atualiza, recadastro não limpa opted_out_at e apaga", () => {
+      expect(
+        valor(
+          comoAuth(
+            ADMIN_EMAIL,
+            "select string_agg(nome, ',' order by nome) from public.vip_leads",
+          ),
+        ),
+      ).toBe("João Souza,Maria Silva");
+
+      ok(
+        comoAuth(
+          ADMIN_EMAIL,
+          "update public.vip_leads set opted_out_at = now() where whatsapp_e164 = '+5514998765432'",
+        ),
+      );
+
+      expect(
+        valor(
+          comoAuth(
+            ADMIN_EMAIL,
+            "select count(*) from public.vip_leads where opted_out_at is not null and whatsapp_e164 = '+5514998765432'",
+          ),
+        ),
+      ).toBe("1");
+
+      // Recadastro via RPC após opt-out NÃO limpa opted_out_at:
+      ok(
+        comoAnon(`
+          select public.vip_lead_signup(
+            'Maria Tentando Reativar', '+5514998765432', 'bike', 'v1'
+          )
+        `),
+      );
+
+      expect(
+        valor(
+          comoAuth(
+            ADMIN_EMAIL,
+            "select count(*) from public.vip_leads where opted_out_at is not null and whatsapp_e164 = '+5514998765432'",
+          ),
+        ),
+      ).toBe("1");
+
+      ok(
+        comoAuth(
+          ADMIN_EMAIL,
+          "delete from public.vip_leads where whatsapp_e164 = '+551433812345'",
+        ),
+      );
+
+      expect(
+        valor(comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads")),
+      ).toBe("1");
+    });
+  },
+);
