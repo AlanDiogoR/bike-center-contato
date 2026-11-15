@@ -45,4 +45,21 @@ describe("trackOutboundClick", () => {
     });
     expect(w.dataLayer[0]).not.toHaveProperty("ignored");
   });
+
+  it("anexa UTMs mesmo com chave suja (espaço, %20 ou maiúsculas)", () => {
+    window.history.pushState(
+      {},
+      "",
+      "/?UTM_Source=placa&utm%20_medium=nfc&utm%20_campaign=placa_balcao",
+    );
+    const w = window as Window & { dataLayer: Record<string, unknown>[] };
+
+    trackOutboundClick("Avaliar no Google", "https://www.google.com/maps", "review");
+
+    expect(w.dataLayer[0]).toMatchObject({
+      utm_source: "placa",
+      utm_medium: "nfc",
+      utm_campaign: "placa_balcao",
+    });
+  });
 });
