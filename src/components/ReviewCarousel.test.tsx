@@ -48,9 +48,46 @@ describe("ReviewCarousel", () => {
     );
     expect(screen.getByText("Passo 4 de 4")).toBeInTheDocument();
     expect(screen.getByText("Publicar")).toBeInTheDocument();
+    expect(
+      screen.getByText("Conte como foi sua experiência"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/5 de 5/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/5 estrelas/i)).not.toBeInTheDocument();
     const cta = screen.getByRole("link", { name: /Avaliar agora no Google/i });
     expect(cta).toHaveAttribute("href", googleReviewLink.href);
     expect(cta).toHaveClass("h-12");
     expect(screen.getByTestId("review-cta-slot")).toContainElement(cta);
+  });
+
+  it("usa texto neutro e não induz nota em nenhum passo do carrossel", () => {
+    render(<ReviewCarousel />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs).toHaveLength(4);
+
+    for (const tab of tabs) {
+      fireEvent.click(tab);
+      expect(screen.queryByText(/5 estrelas/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/cinco estrelas/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/5 de 5/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/nota máxima/i)).not.toBeInTheDocument();
+    }
+
+    fireEvent.click(
+      screen.getByRole("tab", {
+        name: /Ir para o passo 3: Escreva a avaliação/i,
+      }),
+    );
+    expect(
+      screen.getByText(
+        "Toque em “Escrever uma avaliação” e conte como foi sua experiência.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("tab", { name: /Ir para o passo 4: Publique/i }),
+    );
+    expect(
+      screen.getByText("Conte como foi sua experiência"),
+    ).toBeInTheDocument();
   });
 });
