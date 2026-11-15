@@ -1,7 +1,8 @@
--- Migration: cria a tabela public.vip_leads com RLS forçada, privilégios mínimos
--- e RPC public.vip_lead_signup (SECURITY DEFINER) sem vazar duplicados.
+-- Migration: cria a tabela public.vip_leads com RLS forçada, privilégios mínimos,
+-- verificação de admin via public.is_vip_admin() em auth.users e RPC public.vip_lead_signup
+-- (SECURITY DEFINER) compatível com dono sem superuser/BYPASSRLS e sem vazar duplicados.
 -- Admin único autorizado para leitura/gestão: alandiogor@gmail.com
--- (com email_verified = true e is_anonymous = false, sem usar user_metadata).
+-- (validado em auth.users com id = auth.uid(), email_confirmed_at is not null e not is_anonymous).
 
 create table if not exists public.vip_leads (
   id uuid primary key default gen_random_uuid(),
@@ -124,7 +125,7 @@ begin
     p_utm_source,
     p_utm_campaign
   )
-  on conflict (whatsapp_e164) do nothing;
+  on conflict do nothing;
 end;
 $$;
 
@@ -134,58 +135,90 @@ grant execute on function public.vip_lead_signup(text, text, text, text, text, t
 comment on function public.vip_lead_signup(text, text, text, text, text, text) is
   'Cadastra lead VIP validando os campos, forçando consent_at = now() e ignorando duplicados sem vazar existência prévia nem expor id.';
 
+-- Função de verificação do administrador único diretamente em auth.users (sem depender de claims do JWT).
+create or replace function public.is_vip_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists(
+    select 1
+    from auth.users
+    where id = auth.uid()
+      and email = 'alandiogor@gmail.com'
+      and email_confirmed_at is not null
+      and not is_anonymous
+  );
+$$;
+
+revoke all on function public.is_vip_admin() from public, anon, authenticated, service_role;
+grant execute on function public.is_vip_admin() to authenticated;
+
+comment on function public.is_vip_admin() is
+  'Verifica em auth.users se auth.uid() pertence ao admin alandiogor@gmail.com com email_confirmed_at preenchido e not is_anonymous.';
+
 -- Remove policy de insert legada caso exista.
 drop policy if exists vip_leads_insert_consent on public.vip_leads;
 
--- Policy de SELECT: somente o administrador autenticado (alandiogor@gmail.com)
--- com e-mail verificado e sessão não anônima pode ler os leads (sem consultar user_metadata).
+-- Policy de INSERT restrita exclusivamente ao dono (definer) da tabela/RPC para que
+-- public.vip_lead_signup funcione com FORCE ROW LEVEL SECURITY mesmo quando o dono
+-- não é superuser e não possui BYPASSRLS (nunca permite INSERT direto de anon/authenticated).
+drop policy if exists vip_leads_definer_insert on public.vip_leads;
+create policy vip_leads_definer_insert
+  on public.vip_leads
+  for insert
+  with check (
+    current_user not in ('anon', 'authenticated')
+    and current_user in (
+      (
+        select pg_catalog.pg_get_userbyid(c.relowner)
+        from pg_catalog.pg_class c
+        where c.oid = 'public.vip_leads'::pg_catalog.regclass
+      ),
+      (
+        select pg_catalog.pg_get_userbyid(p.proowner)
+        from pg_catalog.pg_proc p
+        where p.oid = 'public.vip_lead_signup(text,text,text,text,text,text)'::pg_catalog.regprocedure
+      )
+    )
+    and opted_out_at is null
+  );
+
+comment on policy vip_leads_definer_insert on public.vip_leads is
+  'Permite INSERT sob FORCE RLS exclusivamente ao role definer/dono da tabela e da RPC vip_lead_signup (nunca para anon ou authenticated).';
+
+-- Policy de SELECT: somente o administrador confirmado em auth.users via public.is_vip_admin().
 drop policy if exists vip_leads_admin_select on public.vip_leads;
 create policy vip_leads_admin_select
   on public.vip_leads
   for select
   to authenticated
-  using (
-    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
-    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
-    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
-  );
+  using ((select public.is_vip_admin()));
 
 comment on policy vip_leads_admin_select on public.vip_leads is
-  'Restringe SELECT na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';
+  'Restringe SELECT na tabela vip_leads exclusivamente ao administrador confirmado em auth.users via public.is_vip_admin().';
 
--- Policy de UPDATE: somente o administrador autenticado (alandiogor@gmail.com)
--- com e-mail verificado e sessão não anônima pode atualizar registros (ex.: preencher opted_out_at).
+-- Policy de UPDATE: somente o administrador confirmado em auth.users via public.is_vip_admin().
 drop policy if exists vip_leads_admin_update on public.vip_leads;
 create policy vip_leads_admin_update
   on public.vip_leads
   for update
   to authenticated
-  using (
-    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
-    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
-    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
-  )
-  with check (
-    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
-    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
-    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
-  );
+  using ((select public.is_vip_admin()))
+  with check ((select public.is_vip_admin()));
 
 comment on policy vip_leads_admin_update on public.vip_leads is
-  'Restringe UPDATE na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';
+  'Restringe UPDATE na tabela vip_leads exclusivamente ao administrador confirmado em auth.users via public.is_vip_admin().';
 
--- Policy de DELETE: somente o administrador autenticado (alandiogor@gmail.com)
--- com e-mail verificado e sessão não anônima pode remover registros da tabela.
+-- Policy de DELETE: somente o administrador confirmado em auth.users via public.is_vip_admin().
 drop policy if exists vip_leads_admin_delete on public.vip_leads;
 create policy vip_leads_admin_delete
   on public.vip_leads
   for delete
   to authenticated
-  using (
-    (auth.jwt() ->> 'email') = 'alandiogor@gmail.com'
-    and coalesce((auth.jwt() ->> 'email_verified')::boolean, (auth.jwt() -> 'app_metadata' ->> 'provider') = 'email', false) = true
-    and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
-  );
+  using ((select public.is_vip_admin()));
 
 comment on policy vip_leads_admin_delete on public.vip_leads is
-  'Restringe DELETE na tabela vip_leads exclusivamente ao usuário autenticado alandiogor@gmail.com com email_verified = true e is_anonymous = false.';
+  'Restringe DELETE na tabela vip_leads exclusivamente ao administrador confirmado em auth.users via public.is_vip_admin().';

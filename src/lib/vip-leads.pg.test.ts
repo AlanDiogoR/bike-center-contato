@@ -30,6 +30,7 @@ const bin = acharBin();
 const raiz = path.resolve(__dirname, "../..");
 const ADMIN_UID = "11111111-1111-4111-8111-111111111111";
 const OUTRO_UID = "22222222-2222-4222-8222-222222222222";
+const SEM_LINHA_UID = "99999999-9999-4999-8999-999999999999";
 const ADMIN_EMAIL = "alandiogor@gmail.com";
 const OUTRO_EMAIL = "outro@example.com";
 
@@ -172,6 +173,17 @@ describe.skipIf(devePularPg(bin))(
       for (const f of arquivos) {
         rodarArquivo(path.join(pastaMigrations, f));
       }
+
+      // Popula auth.users com o admin confirmado e outro usuário autenticado
+      ok(
+        psql(`
+          insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data, raw_app_meta_data, is_anonymous)
+          values
+            ('${ADMIN_UID}', '${ADMIN_EMAIL}', now(), '{"email_verified":true}'::jsonb, '{"provider":"email"}'::jsonb, false),
+            ('${OUTRO_UID}', '${OUTRO_EMAIL}', now(), '{}'::jsonb, '{"provider":"email"}'::jsonb, false)
+          on conflict (id) do nothing;
+        `),
+      );
     });
 
     afterAll(() => {
@@ -195,7 +207,7 @@ describe.skipIf(devePularPg(bin))(
       );
     });
 
-    test("RLS enable + force ligada, índice único, policies sem user_metadata e privilégios mínimos da tabela e RPC", () => {
+    test("RLS enable + force ligada, índice único, is_vip_admin() sem claims/user_metadata e privilégios mínimos da tabela e funções", () => {
       expect(
         valor(
           psql(
@@ -217,7 +229,7 @@ describe.skipIf(devePularPg(bin))(
           "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
         ),
       );
-      expect(policies).toBe("3");
+      expect(policies).toBe("4");
 
       const cmdsPolicies = valor(
         psql(
@@ -225,16 +237,53 @@ describe.skipIf(devePularPg(bin))(
         ),
       );
       expect(cmdsPolicies).toBe(
-        "DELETE:authenticated|SELECT:authenticated|UPDATE:authenticated",
+        "DELETE:authenticated|INSERT:public|SELECT:authenticated|UPDATE:authenticated",
       );
 
-      // Nenhuma policy pode usar user_metadata (editável pelo usuário no Supabase)
-      const usaUserMetadata = valor(
+      // As 3 policies de admin usam exclusivamente public.is_vip_admin()
+      const policiesAdmin = valor(
         psql(
-          "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and (coalesce(qual, '') ilike '%user_metadata%' or coalesce(with_check, '') ilike '%user_metadata%')",
+          "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and cmd in ('SELECT', 'UPDATE', 'DELETE') and qual ~ 'is_vip_admin' and (cmd <> 'UPDATE' or with_check ~ 'is_vip_admin')",
         ),
       );
-      expect(usaUserMetadata).toBe("0");
+      expect(policiesAdmin).toBe("3");
+
+      // Nenhuma policy pode usar user_metadata nem claims de e-mail/provider do JWT
+      const usaClaimsOuUserMetadata = valor(
+        psql(
+          "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and (coalesce(qual, '') ~* 'user_metadata|auth\\.jwt|email_verified|provider' or coalesce(with_check, '') ~* 'user_metadata|auth\\.jwt|email_verified|provider')",
+        ),
+      );
+      expect(usaClaimsOuUserMetadata).toBe("0");
+
+      // Metadados e privilégios de public.is_vip_admin()
+      const ivaMeta = valor(
+        psql(
+          "select p.prosecdef::text || ':' || p.provolatile::text || ':' || l.lanname || ':' || pg_get_function_result(p.oid) || ':' || coalesce(array_to_string(p.proconfig, ';'), '') from pg_proc p join pg_language l on l.oid = p.prolang where p.oid = 'public.is_vip_admin()'::regprocedure",
+        ),
+      );
+      expect(ivaMeta).toBe('true:s:sql:boolean:search_path=""');
+
+      expect(
+        valor(
+          psql(
+            "select has_function_privilege('anon', 'public.is_vip_admin()'::regprocedure, 'execute')::text || ':' || has_function_privilege('authenticated', 'public.is_vip_admin()'::regprocedure, 'execute')::text",
+          ),
+        ),
+      ).toBe("false:true");
+
+      const publicExecIva = valor(
+        psql(
+          "select exists(select 1 from aclexplode((select proacl from pg_proc where oid = 'public.is_vip_admin()'::regprocedure)) a where a.grantee = 0)::text",
+        ),
+      );
+      expect(publicExecIva).toBe("false");
+
+      // anon não executa public.is_vip_admin()
+      negado(
+        comoAnon("select public.is_vip_admin()"),
+        /permission denied for function is_vip_admin/,
+      );
 
       // anon não tem nenhum privilégio na tabela nem em colunas
       const privsTabelaAnon = valor(
@@ -261,7 +310,7 @@ describe.skipIf(devePularPg(bin))(
         ).toBe("f");
       }
 
-      // Exatamente UMA função em public executável por anon, SECURITY DEFINER, search_path fixo, retorno void e PUBLIC revogado
+      // Exatamente UMA função em public executável por anon: vip_lead_signup
       const fnsAnon = valor(
         psql(
           "select string_agg(p.oid::regprocedure::text, '|') from pg_proc p where p.pronamespace = 'public'::regnamespace and has_function_privilege('anon', p.oid, 'execute')",
@@ -580,14 +629,16 @@ describe.skipIf(devePularPg(bin))(
       ).toBe("2");
     });
 
-    test("admin com email_verified=false ou is_anonymous=true não vê nada, não atualiza e não apaga", () => {
-      // 1) email_verified = false (mesmo tentando spoofar user_metadata.email_verified = true)
+    test("claim de e-mail forjado no JWT sem linha correspondente em auth.users (ou com outro uid) não vê, não atualiza e não apaga", () => {
+      // 1) UID inexistente em auth.users tentando forjar email = alandiogor@gmail.com no JWT
       expect(
         valor(
           comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
-            emailVerified: false,
+            uid: SEM_LINHA_UID,
+            emailVerified: true,
             isAnonymous: false,
             extraClaims: {
+              app_metadata: { provider: "email" },
               user_metadata: { email: ADMIN_EMAIL, email_verified: true },
             },
           }),
@@ -597,53 +648,36 @@ describe.skipIf(devePularPg(bin))(
       ok(
         comoAuth(
           ADMIN_EMAIL,
-          "update public.vip_leads set opted_out_at = now()",
-          { emailVerified: false, isAnonymous: false },
+          "update public.vip_leads set nome = 'Forjado Sem Linha', opted_out_at = now()",
+          {
+            uid: SEM_LINHA_UID,
+            emailVerified: true,
+            isAnonymous: false,
+          },
         ),
       );
       ok(
         comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
-          emailVerified: false,
+          uid: SEM_LINHA_UID,
+          emailVerified: true,
           isAnonymous: false,
         }),
       );
 
-      // 2) sem claim email_verified (null)
+      // 2) UID de outro usuário existente em auth.users tentando forjar email = alandiogor@gmail.com no JWT
       expect(
         valor(
           comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
-            emailVerified: null,
+            uid: OUTRO_UID,
+            emailVerified: true,
             isAnonymous: false,
             extraClaims: {
+              app_metadata: { provider: "email" },
               user_metadata: { email: ADMIN_EMAIL, email_verified: true },
             },
           }),
         ),
       ).toBe("0");
-
-      // 3) is_anonymous = true (mesmo com email_verified = true)
-      expect(
-        valor(
-          comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
-            emailVerified: true,
-            isAnonymous: true,
-          }),
-        ),
-      ).toBe("0");
-
-      ok(
-        comoAuth(
-          ADMIN_EMAIL,
-          "update public.vip_leads set opted_out_at = now()",
-          { emailVerified: true, isAnonymous: true },
-        ),
-      );
-      ok(
-        comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
-          emailVerified: true,
-          isAnonymous: true,
-        }),
-      );
 
       expect(
         valor(
@@ -654,7 +688,99 @@ describe.skipIf(devePularPg(bin))(
       ).toBe("2");
     });
 
-    test("admin verificado (alandiogor@gmail.com, email_verified=true, is_anonymous=false) vê, atualiza, recadastro não limpa opted_out_at e apaga", () => {
+    test("admin em auth.users com email_confirmed_at=null ou is_anonymous=true não vê nada, não atualiza e não apaga", () => {
+      // 1) email_confirmed_at = null em auth.users (mesmo com claims email_verified=true e provider=email no JWT)
+      ok(
+        psql(
+          `update auth.users set email_confirmed_at = null where id = '${ADMIN_UID}'`,
+        ),
+      );
+      try {
+        expect(
+          valor(
+            comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+              uid: ADMIN_UID,
+              emailVerified: true,
+              isAnonymous: false,
+              extraClaims: {
+                app_metadata: { provider: "email" },
+                user_metadata: { email: ADMIN_EMAIL, email_verified: true },
+              },
+            }),
+          ),
+        ).toBe("0");
+
+        ok(
+          comoAuth(
+            ADMIN_EMAIL,
+            "update public.vip_leads set opted_out_at = now()",
+            { uid: ADMIN_UID, emailVerified: true, isAnonymous: false },
+          ),
+        );
+        ok(
+          comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
+            uid: ADMIN_UID,
+            emailVerified: true,
+            isAnonymous: false,
+          }),
+        );
+      } finally {
+        ok(
+          psql(
+            `update auth.users set email_confirmed_at = now() where id = '${ADMIN_UID}'`,
+          ),
+        );
+      }
+
+      // 2) is_anonymous = true em auth.users (mesmo com email_confirmed_at preenchido e claim is_anonymous=false no JWT)
+      ok(
+        psql(
+          `update auth.users set is_anonymous = true where id = '${ADMIN_UID}'`,
+        ),
+      );
+      try {
+        expect(
+          valor(
+            comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+              uid: ADMIN_UID,
+              emailVerified: true,
+              isAnonymous: false,
+            }),
+          ),
+        ).toBe("0");
+
+        ok(
+          comoAuth(
+            ADMIN_EMAIL,
+            "update public.vip_leads set opted_out_at = now()",
+            { uid: ADMIN_UID, emailVerified: true, isAnonymous: false },
+          ),
+        );
+        ok(
+          comoAuth(ADMIN_EMAIL, "delete from public.vip_leads", {
+            uid: ADMIN_UID,
+            emailVerified: true,
+            isAnonymous: false,
+          }),
+        );
+      } finally {
+        ok(
+          psql(
+            `update auth.users set is_anonymous = false where id = '${ADMIN_UID}'`,
+          ),
+        );
+      }
+
+      expect(
+        valor(
+          psql(
+            "select count(*) from public.vip_leads where opted_out_at is null and nome in ('Maria Silva', 'João Souza')",
+          ),
+        ),
+      ).toBe("2");
+    });
+
+    test("admin confirmado em auth.users (alandiogor@gmail.com, email_confirmed_at is not null, is_anonymous=false) vê, atualiza, recadastro não limpa opted_out_at e apaga", () => {
       expect(
         valor(
           comoAuth(
@@ -708,6 +834,126 @@ describe.skipIf(devePularPg(bin))(
       expect(
         valor(comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads")),
       ).toBe("1");
+    });
+
+    test("RPC vip_lead_signup e is_vip_admin com dono não-superuser e sem BYPASSRLS (vip_owner) funcionam sob FORCE RLS", () => {
+      ok(
+        psql(`
+          do $$
+          begin
+            if not exists (select 1 from pg_roles where rolname = 'vip_owner') then
+              create role vip_owner nologin nosuperuser nobypassrls;
+            end if;
+          end
+          $$;
+          grant usage, create on schema public to vip_owner;
+          grant usage on schema auth to vip_owner;
+          grant select on table auth.users to vip_owner;
+          grant execute on all functions in schema auth to vip_owner;
+          alter table public.vip_leads owner to vip_owner;
+          alter function public.vip_lead_signup(text, text, text, text, text, text) owner to vip_owner;
+          alter function public.is_vip_admin() owner to vip_owner;
+          alter function public.vip_leads_force_consent_at() owner to vip_owner;
+        `),
+      );
+
+      // Confirma que vip_owner não é superuser nem bypassrls e que tabela e funções pertencem a vip_owner com FORCE RLS ativa
+      expect(
+        valor(
+          psql(
+            "select rolsuper::text || ':' || rolbypassrls::text from pg_roles where rolname = 'vip_owner'",
+          ),
+        ),
+      ).toBe("false:false");
+
+      expect(
+        valor(
+          psql(
+            "select pg_get_userbyid(relowner) || ':' || relrowsecurity::text || ':' || relforcerowsecurity::text from pg_class where oid = 'public.vip_leads'::regclass",
+          ),
+        ),
+      ).toBe("vip_owner:true:true");
+
+      expect(
+        valor(
+          psql(
+            "select string_agg(p.proname || '=' || pg_get_userbyid(p.proowner), ',' order by p.proname) from pg_proc p where p.pronamespace = 'public'::regnamespace",
+          ),
+        ),
+      ).toBe(
+        "is_vip_admin=vip_owner,vip_lead_signup=vip_owner,vip_leads_force_consent_at=vip_owner",
+      );
+
+      // anon insere via RPC sob FORCE RLS mesmo com dono sem superuser/BYPASSRLS
+      const rNovo = comoAnon(`
+        select public.vip_lead_signup(
+          'Carlos Sem Superuser', '+5514996660001', 'moto', 'v1', 'placa', 'balcao'
+        )
+      `);
+      ok(rNovo);
+
+      expect(
+        valor(
+          psql(
+            "select count(*) || ':' || max(nome) from public.vip_leads where whatsapp_e164 = '+5514996660001'",
+          ),
+        ),
+      ).toBe("1:Carlos Sem Superuser");
+
+      // Chamada duplicada via RPC sob vip_owner continua não vazando erro nem sobrescrevendo
+      const rDup = comoAnon(`
+        select public.vip_lead_signup(
+          'Carlos Duplicado', '+5514996660001', 'bike', 'v2'
+        )
+      `);
+      ok(rDup);
+      expect(rDup.stdout).toBe(rNovo.stdout);
+      expect(
+        valor(
+          psql(
+            "select count(*) || ':' || max(nome) from public.vip_leads where whatsapp_e164 = '+5514996660001'",
+          ),
+        ),
+      ).toBe("1:Carlos Sem Superuser");
+
+      // Mesmo se INSERT fosse concedido na tabela a anon ou authenticated (em transação com rollback), a policy de INSERT bloqueia
+      negado(
+        psql(`
+          begin;
+          grant insert on table public.vip_leads to anon;
+          set local role anon;
+          insert into public.vip_leads (nome, whatsapp_e164, interesse, consent_text_version)
+          values ('Anon Direto Bloqueado', '+5514996660002', 'bike', 'v1');
+          commit;
+        `),
+        /new row violates row-level security policy for table "vip_leads"/,
+      );
+
+      negado(
+        psql(`
+          begin;
+          grant insert on table public.vip_leads to authenticated;
+          set local role authenticated;
+          set local request.jwt.claim.sub = '${ADMIN_UID}';
+          insert into public.vip_leads (nome, whatsapp_e164, interesse, consent_text_version)
+          values ('Auth Direto Bloqueado', '+5514996660003', 'bike', 'v1');
+          commit;
+        `),
+        /new row violates row-level security policy for table "vip_leads"/,
+      );
+
+      // Admin confirmado continua lendo, atualizando e removendo normalmente
+      expect(
+        valor(comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads")),
+      ).toBe("2");
+
+      expect(
+        valor(
+          comoAuth(OUTRO_EMAIL, "select count(*) from public.vip_leads", {
+            uid: OUTRO_UID,
+          }),
+        ),
+      ).toBe("0");
     });
   },
 );

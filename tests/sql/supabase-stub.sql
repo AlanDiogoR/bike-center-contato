@@ -12,7 +12,7 @@ create table auth.users (
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb,
   raw_app_meta_data jsonb,
-  is_anonymous boolean default false,
+  is_anonymous boolean not null default false,
   created_at timestamptz default now()
 );
 
@@ -38,6 +38,7 @@ create function auth.role() returns text language sql stable as $$
   )
 $$;
 
+grant execute on all functions in schema auth to anon, authenticated, service_role;
 grant usage on schema public to anon, authenticated, service_role;
 
 -- Como no Supabase: tabelas novas do schema public já nascem com ALL para os três papéis.
