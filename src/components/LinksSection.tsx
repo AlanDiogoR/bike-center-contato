@@ -88,7 +88,7 @@ const reviewCtas = [
     placa: "show",
     track: "Avaliar no Google",
     ariaLabel: undefined,
-    size: "min-h-24 text-2xl",
+    size: "min-h-24 text-2xl text-[clamp(1.125rem,6.2vw,1.5rem)] max-[359px]:gap-2.5 max-[359px]:px-3.5",
     text: "Avaliar no Google",
   },
 ] as const;
