@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import HomePage from "@/app/page";
 import { LinksSection } from "./LinksSection";
 import {
   googleMapsLink,
@@ -10,6 +11,24 @@ import {
 
 vi.mock("@/lib/track", () => ({
   trackOutboundClick: vi.fn(),
+}));
+
+vi.mock("next/image", () => ({
+  default: ({
+    alt,
+    priority: _p,
+    ...props
+  }: {
+    alt: string;
+    src: string;
+    width?: number;
+    height?: number;
+    className?: string;
+    sizes?: string;
+  }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} {...props} />
+  ),
 }));
 
 const PLACA_CTA = "Avaliar no Google";
@@ -38,16 +57,19 @@ describe("LinksSection", () => {
     style.remove();
     document.documentElement.removeAttribute("data-utm-source");
   });
-  it("mantém os rótulos Claro/Vivo e preserva os hrefs", () => {
-    render(<LinksSection />);
+  it("mantém os rótulos Claro/Vivo com WhatsApp por extenso e preserva os hrefs", () => {
+    const { container } = render(<LinksSection />);
     const claro = screen.getByRole("link", {
-      name: "Conversar no Whats (Claro)",
+      name: "Conversar no WhatsApp (Claro)",
     });
     const vivo = screen.getByRole("link", {
-      name: "Conversar no Whats (Vivo)",
+      name: "Conversar no WhatsApp (Vivo)",
     });
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
+    expect(claro).toHaveAttribute("aria-label", "Conversar no WhatsApp (Claro)");
+    expect(vivo).toHaveAttribute("aria-label", "Conversar no WhatsApp (Vivo)");
+    expect(container.textContent).not.toMatch(/\bWhats\b/);
     expect(
       screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
     ).not.toBeInTheDocument();
@@ -86,11 +108,11 @@ describe("LinksSection", () => {
     expect(links[0].className).toMatch(/animate-pulse-review/);
     expect(links[0].className).toMatch(/motion-reduce:animate-none/);
     expect(
-      screen.getByRole("link", { name: "Conversar no Whats (Claro)" }).className,
+      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }).className,
     ).not.toMatch(/animate-pulse/);
     const pix = screen.getByRole("button", { name: "Pagar com Pix" });
     const claro = screen.getByRole("link", {
-      name: "Conversar no Whats (Claro)",
+      name: "Conversar no WhatsApp (Claro)",
     });
     expect(
       links[0].compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -187,7 +209,43 @@ describe("LinksSection", () => {
     );
     expect(original).toHaveAttribute("href", cta.getAttribute("href"));
     expect(
-      screen.getByRole("link", { name: "Conversar no Whats (Claro)" }),
+      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }),
     ).toBeVisible();
+  });
+
+  it("usa o símbolo único #icon-whatsapp (3 <use> no corpo + 2 no rodapé = 5) e o SVG oficial do Mercado Livre sem SiMercadopago", () => {
+    const { container } = render(<HomePage />);
+
+    const symbols = container.querySelectorAll("symbol#icon-whatsapp");
+    expect(symbols.length).toBe(1);
+    expect(symbols[0].getAttribute("viewBox")).toBe("0 0 720 720");
+
+    const allUses = container.querySelectorAll('use[href="#icon-whatsapp"]');
+    expect(allUses.length).toBe(5);
+
+    const footer = container.querySelector("footer");
+    expect(Boolean(footer)).toBe(true);
+    const footerUses = footer!.querySelectorAll('use[href="#icon-whatsapp"]');
+    expect(footerUses.length).toBe(2);
+    expect(allUses.length - footerUses.length).toBe(3);
+
+    const svgs = Array.from(container.querySelectorAll("svg"));
+    expect(container.innerHTML).not.toContain("#3483FA");
+    expect(
+      svgs.filter((s) => s.getAttribute("viewBox") === "0 0 163 113").length,
+    ).toBe(2);
+
+    const waLinks = container.querySelectorAll('a[href^="https://wa.me/"]');
+    expect(waLinks.length).toBe(4);
+    waLinks.forEach((a) => {
+      const aria = a.getAttribute("aria-label") ?? "";
+      expect(aria).toContain("WhatsApp");
+      expect(aria).not.toMatch(/\bWhats\b/);
+      const svg = a.querySelector("svg");
+      expect(svg?.getAttribute("viewBox")).toBe("0 0 720 720");
+      expect(Boolean(a.querySelector('use[href="#icon-whatsapp"]'))).toBe(true);
+    });
+
+    expect(container.textContent).not.toMatch(/\bWhats\b/);
   });
 });
