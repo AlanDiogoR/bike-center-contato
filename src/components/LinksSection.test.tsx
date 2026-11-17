@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { readFileSync } from "fs";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HomePage from "@/app/page";
 import { LinksSection } from "./LinksSection";
@@ -40,7 +41,6 @@ function installPlacaCss() {
   const style = document.createElement("style");
   style.textContent = `
     html:not([data-utm-source="placa"]) [data-placa="show"] { display: none; }
-    html:not([data-utm-source="placa"]) .cta-wa { order: -1; }
     html[data-utm-source="placa"] [data-placa="hide"] { display: none; }
   `;
   document.head.appendChild(style);
@@ -139,8 +139,18 @@ describe("LinksSection", () => {
     expect(ordered[1]).toBe(vivo);
     expect(ordered[2]).toBe(pix);
     expect(ordered[3]).toBe(review);
-    expect(window.getComputedStyle(claro).order).toBe("-1");
-    expect(window.getComputedStyle(vivo).order).toBe("-1");
+    expect(window.getComputedStyle(claro).order).not.toBe("-1");
+    expect(window.getComputedStyle(vivo).order).not.toBe("-1");
+
+    expect(
+      claro.compareDocumentPosition(vivo) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      vivo.compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      pix.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
 
     expect(review).toHaveAccessibleName(DEFAULT_REVIEW_ARIA);
     expect(review).toHaveTextContent("Avalie no Google");
@@ -237,11 +247,15 @@ describe("LinksSection", () => {
     expect(ordered[2]).toBe(claro);
     expect(ordered[3]).toBe(vivo);
     expect(window.getComputedStyle(claro).order).not.toBe("-1");
+    expect(window.getComputedStyle(pix).order).not.toBe("-1");
     expect(
       cta.compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
       pix.compareDocumentPosition(claro) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      claro.compareDocumentPosition(vivo) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
 
     expect(cta).toBeVisible();
@@ -323,5 +337,31 @@ describe("LinksSection", () => {
     });
 
     expect(container.textContent).not.toMatch(/\bWhats\b/);
+  });
+
+  it("garante que globals.css não contém order: -1 para .cta-wa", () => {
+    const css = readFileSync("src/app/globals.css", "utf8");
+    expect(css).not.toContain("order: -1");
+    expect(css).not.toMatch(/\.cta-wa\s*\{[^}]*order/);
+  });
+
+  it("permite abrir o modal do Pix em ambas as variantes", () => {
+    // 1) Home padrão
+    const { unmount } = render(<LinksSection />);
+    const pixDefault = screen.getByRole("button", { name: "Pagar com Pix" });
+    expect(pixDefault).toBeVisible();
+    expect(pixDefault).toHaveAttribute("data-placa", "hide");
+    fireEvent.click(pixDefault);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    unmount();
+
+    // 2) Variante placa
+    document.documentElement.setAttribute("data-utm-source", "placa");
+    render(<LinksSection />);
+    const pixPlaca = screen.getByRole("button", { name: "Pagar com Pix" });
+    expect(pixPlaca).toBeVisible();
+    expect(pixPlaca).toHaveAttribute("data-placa", "show");
+    fireEvent.click(pixPlaca);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

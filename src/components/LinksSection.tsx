@@ -46,7 +46,11 @@ function SocialIcon({ kind }: { kind: (typeof socialLinks)[number]["icon"] }) {
   }
 }
 
-function PixButton() {
+function PixButton({
+  "data-placa": dataPlaca,
+}: {
+  "data-placa"?: "show" | "hide";
+} = {}) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -55,6 +59,7 @@ function PixButton() {
       <button
         ref={triggerRef}
         type="button"
+        data-placa={dataPlaca}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
@@ -102,13 +107,14 @@ export function LinksSection() {
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
         </a>
 
-        <PixButton />
+        <PixButton data-placa="show" />
 
         {highlightOffer.enabled ? (
           <a
             href={highlightOffer.href}
             target="_blank"
             rel="noopener noreferrer"
+            data-placa="show"
             onClick={() =>
               trackOutboundClick(
                 highlightOffer.label,
@@ -154,6 +160,28 @@ export function LinksSection() {
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
           </a>
         ))}
+
+        <PixButton data-placa="hide" />
+
+        {highlightOffer.enabled ? (
+          <a
+            href={highlightOffer.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-placa="hide"
+            onClick={() =>
+              trackOutboundClick(
+                highlightOffer.label,
+                highlightOffer.href,
+                "highlight",
+              )
+            }
+            className={`flex min-h-14 items-center gap-4 rounded-2xl bg-sunset px-5 py-4 text-left text-base font-bold text-ink ${focusRing}`}
+          >
+            <span className="flex-1 leading-snug">{highlightOffer.label}</span>
+            <FaExternalLinkAlt className="h-5 w-5 shrink-0" aria-hidden />
+          </a>
+        ) : null}
 
         <a
           href={googleReviewLink.href}
