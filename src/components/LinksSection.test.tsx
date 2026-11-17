@@ -40,10 +40,23 @@ function installPlacaCss() {
   const style = document.createElement("style");
   style.textContent = `
     html:not([data-utm-source="placa"]) [data-placa="show"] { display: none; }
+    html:not([data-utm-source="placa"]) .cta-wa { order: -1; }
     html[data-utm-source="placa"] [data-placa="hide"] { display: none; }
   `;
   document.head.appendChild(style);
   return style;
+}
+
+function getVisibleFlexItemsInOrder() {
+  const list = document.querySelector(".flex.flex-col.gap-3");
+  if (!list) return [];
+  return Array.from(list.children)
+    .filter((el) => window.getComputedStyle(el).display !== "none")
+    .sort((a, b) => {
+      const orderA = Number(window.getComputedStyle(a).order || 0);
+      const orderB = Number(window.getComputedStyle(b).order || 0);
+      return orderA - orderB;
+    });
 }
 
 describe("LinksSection", () => {
@@ -103,29 +116,49 @@ describe("LinksSection", () => {
     expect(review.getAttribute("href")).toContain("!9m1!1b1");
   });
 
-  it("coloca a avaliação do Google antes do Pix e dos WhatsApps", () => {
+  it("coloca o WhatsApp como 1º CTA visível na home padrão e a avaliação secundária sem pulso depois dos WhatsApps", () => {
     render(<LinksSection />);
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAccessibleName(DEFAULT_REVIEW_ARIA);
-    expect(links[0]).toHaveTextContent("Avalie no Google");
-    expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
-      "Avalie no Google",
-    );
-    expect(links[0]).toHaveAttribute("href", googleReviewLink.href);
-    expect(links[0].className).toMatch(/animate-pulse-review/);
-    expect(links[0].className).toMatch(/motion-reduce:animate-none/);
-    expect(
-      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }).className,
-    ).not.toMatch(/animate-pulse/);
-    const pix = screen.getByRole("button", { name: "Pagar com Pix" });
     const claro = screen.getByRole("link", {
       name: "Conversar no WhatsApp (Claro)",
     });
+    const vivo = screen.getByRole("link", {
+      name: "Conversar no WhatsApp (Vivo)",
+    });
+    const pix = screen.getByRole("button", { name: "Pagar com Pix" });
+    const review = screen.getByRole("link", {
+      name: DEFAULT_REVIEW_ARIA,
+    });
+
+    expect(links[0]).toBe(claro);
+    expect(links[1]).toBe(vivo);
+    expect(links[2]).toBe(review);
+
+    const ordered = getVisibleFlexItemsInOrder();
+    expect(ordered[0]).toBe(claro);
+    expect(ordered[1]).toBe(vivo);
+    expect(ordered[2]).toBe(pix);
+    expect(ordered[3]).toBe(review);
+    expect(window.getComputedStyle(claro).order).toBe("-1");
+    expect(window.getComputedStyle(vivo).order).toBe("-1");
+
+    expect(review).toHaveAccessibleName(DEFAULT_REVIEW_ARIA);
+    expect(review).toHaveTextContent("Avalie no Google");
+    expect(review.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "Avalie no Google",
+    );
+    expect(review).toHaveAttribute("href", googleReviewLink.href);
+    expect(review.className).not.toMatch(/animate-pulse-review/);
+    expect(review.className).not.toMatch(/animate-pulse/);
+    expect(review.className).toMatch(/min-h-14/);
+    expect(review.className).toMatch(/text-base/);
+    expect(claro.className).not.toMatch(/animate-pulse/);
+
     expect(
-      links[0].compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
+      claro.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      pix.compareDocumentPosition(claro) & Node.DOCUMENT_POSITION_FOLLOWING,
+      vivo.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
@@ -150,15 +183,16 @@ describe("LinksSection", () => {
     );
   });
 
-  it("sem utm_source=placa mantém o botão e o tutorial de hoje", () => {
+  it("sem utm_source=placa mantém o botão de avaliação visível (sem pulso) e o tutorial", () => {
     render(<LinksSection />);
     const review = screen.getByRole("link", {
       name: DEFAULT_REVIEW_ARIA,
     });
     expect(review).toBeVisible();
     expect(review).toHaveAttribute("href", googleReviewLink.href);
-    expect(review.className).toMatch(/animate-pulse-review/);
-    expect(review.className).toMatch(/motion-reduce:animate-none/);
+    expect(review.className).not.toMatch(/animate-pulse-review/);
+    expect(review.className).toMatch(/min-h-14/);
+    expect(review.className).toMatch(/text-base/);
     expect(
       screen.queryByRole("link", { name: PLACA_CTA }),
     ).not.toBeInTheDocument();
@@ -166,6 +200,7 @@ describe("LinksSection", () => {
     expect(parked).not.toBeVisible();
     expect(parked).toHaveAttribute("href", googleReviewLink.href);
     expect(parked).toHaveTextContent(PLACA_CTA);
+    expect(parked?.className).toMatch(/animate-pulse-review/);
     expect(review).toHaveTextContent("Avalie no Google");
     expect(screen.getByText("Como nos avaliar")).toBeVisible();
     expect(screen.getByText("Passo 1 de 4")).toBeVisible();
@@ -178,13 +213,37 @@ describe("LinksSection", () => {
     ).toBeVisible();
   });
 
-  it("com utm_source=placa esconde o tutorial e mostra o CTA grande", () => {
+  it("com utm_source=placa esconde o tutorial e mostra o CTA grande na mesma ordem de antes", () => {
     document.documentElement.setAttribute("data-utm-source", "placa");
     render(<LinksSection />);
 
     const links = screen.getAllByRole("link");
     const cta = screen.getByRole("link", { name: PLACA_CTA });
+    const pix = screen.getByRole("button", { name: "Pagar com Pix" });
+    const claro = screen.getByRole("link", {
+      name: "Conversar no WhatsApp (Claro)",
+    });
+    const vivo = screen.getByRole("link", {
+      name: "Conversar no WhatsApp (Vivo)",
+    });
+
     expect(links[0]).toBe(cta);
+    expect(links[1]).toBe(claro);
+    expect(links[2]).toBe(vivo);
+
+    const ordered = getVisibleFlexItemsInOrder();
+    expect(ordered[0]).toBe(cta);
+    expect(ordered[1]).toBe(pix);
+    expect(ordered[2]).toBe(claro);
+    expect(ordered[3]).toBe(vivo);
+    expect(window.getComputedStyle(claro).order).not.toBe("-1");
+    expect(
+      cta.compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      pix.compareDocumentPosition(claro) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
     expect(cta).toBeVisible();
     expect(cta).toHaveAttribute("href", googleReviewLink.href);
     expect(cta.getAttribute("href")).toBe(googleReviewLink.href);
@@ -210,14 +269,13 @@ describe("LinksSection", () => {
     const original = document.querySelector('a[data-placa="hide"]');
     expect(original).not.toBeVisible();
     expect(original).toHaveTextContent("Avalie no Google");
+    expect(original?.className).not.toMatch(/animate-pulse-review/);
     expect(original).toHaveAttribute(
       "aria-label",
       DEFAULT_REVIEW_ARIA,
     );
     expect(original).toHaveAttribute("href", cta.getAttribute("href"));
-    expect(
-      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }),
-    ).toBeVisible();
+    expect(claro).toBeVisible();
   });
 
   it("usa o símbolo único #icon-whatsapp (3 <use> no corpo + 2 no rodapé = 5) e o SVG oficial do Mercado Livre sem SiMercadopago", () => {
