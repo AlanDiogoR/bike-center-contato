@@ -28,21 +28,29 @@ describe("links", () => {
     expect(u.searchParams.get("text")).toBe(SALES_MESSAGE_RITA);
   });
 
-  it("mantém dois atalhos de WhatsApp Claro/Vivo e os mesmos números", () => {
+  it("mantém dois atalhos de WhatsApp Claro/Vivo com WhatsApp por extenso e os mesmos números", () => {
     expect(whatsappSalesLinks).toHaveLength(2);
     expect(whatsappSalesLinks[0]).toMatchObject({
       id: "claro",
-      label: "Conversar no Whats (Claro)",
+      carrier: "Claro",
+      footerLabel: "WhatsApp Claro",
+      label: "Conversar no WhatsApp (Claro)",
       phoneDigits: PHONE_CLARO,
+      phoneDisplay: "(14) 99166-7793",
     });
     expect(whatsappSalesLinks[1]).toMatchObject({
       id: "vivo",
-      label: "Conversar no Whats (Vivo)",
+      carrier: "Vivo",
+      footerLabel: "WhatsApp Vivo",
+      label: "Conversar no WhatsApp (Vivo)",
       phoneDigits: PHONE_VIVO,
+      phoneDisplay: "(14) 99632-5919",
     });
     whatsappSalesLinks.forEach((l) => {
       expect(l.href).toBe(buildWhatsAppHref(l.phoneDigits));
       expect(l.href).toMatch(/^https:\/\/wa\.me\//);
+      expect(l.label).toContain("WhatsApp");
+      expect(l.label).not.toMatch(/\bWhats\b/);
     });
   });
 
@@ -65,6 +73,11 @@ describe("links", () => {
     expect(googleMapsLink.href.toLowerCase()).not.toContain("procopio");
     expect(googleMapsPlaceLink.href).toContain("Bike+Center+Fartura");
     expect(googleMapsPlaceLink.href).toContain("-23.3883268,-49.5062797");
+    expect(googleMapsPlaceLink.href).toContain(
+      "0x94c1a51538905ff9:0x7771bcda03c58d75",
+    );
+    expect(googleMapsPlaceLink.href).not.toContain("!9m1!1b1");
+    expect(googleMapsPlaceLink.href).not.toContain("/place//");
     expect(googleReviewLink.label).toBe("Nos avalie no Google");
     expect(googleReviewLink.prominentLabel).toBe(
       "Avalie a Bike Center no Google",
@@ -91,6 +104,12 @@ describe("links", () => {
     expect(store.address.display).not.toMatch(/Vila Nova/i);
     expect(store.hours.display).toBe("Seg–Sex 8h–18h · Sáb 8h–13h");
     expect(store.hours.display).not.toMatch(/17h|12h/);
+    expect(store.hours.sunday).toBe("Fechado");
+    expect(store.hours.rows).toEqual([
+      { days: "Seg–Sex", hours: "8h–18h" },
+      { days: "Sábado", hours: "8h–13h" },
+      { days: "Domingo", hours: "Fechado" },
+    ]);
     expect(store.trustLine).toBe("Há mais de 30 anos em Fartura");
     expect(store).not.toHaveProperty("foundingDate");
   });

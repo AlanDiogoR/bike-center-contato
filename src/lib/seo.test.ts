@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { PNG } from "pngjs";
-import { PHONE_CLARO, PHONE_VIVO, googleMapsPlaceLink, store } from "./links";
+import {
+  PHONE_CLARO,
+  PHONE_VIVO,
+  googleMapsPlaceLink,
+  store,
+  whatsappSalesLinks,
+} from "./links";
 import { PIX_KEY } from "./pix";
 import {
   buildJsonLd,
@@ -39,6 +45,10 @@ describe("SEO local", () => {
       longitude: store.geo.longitude,
     });
     expect(data.hasMap).toBe(googleMapsPlaceLink.href);
+    expect(data.hasMap).toContain("Bike+Center+Fartura");
+    expect(data.hasMap).toContain("0x94c1a51538905ff9:0x7771bcda03c58d75");
+    expect(data.hasMap).not.toContain("!9m1!1b1");
+    expect(data.hasMap).not.toContain("/place//");
     expect(data.sameAs).toContain("https://www.instagram.com/bikecenterfartura");
     expect(data.sameAs).toContain(
       "https://www.facebook.com/profile.php?id=61576748073943",
@@ -50,6 +60,46 @@ describe("SEO local", () => {
     expect(data.description).toBe(store.citation);
     expect(data.address.postalCode).toBe("18870-712");
     expect(json).not.toContain("18870-000");
+  });
+
+  it("mantém NAP do JSON-LD idêntico a links.ts e openingHoursSpecification só Seg–Sex 08:00–18:00 e Sáb 08:00–13:00 (domingo ausente)", () => {
+    const data = buildJsonLd(DEFAULT_SITE_URL);
+    expect(data.name).toBe(store.name);
+    expect(data.description).toBe(store.citation);
+    expect(data.telephone).toEqual(
+      whatsappSalesLinks.map((link) => `+${link.phoneDigits}`),
+    );
+    expect(data.address).toEqual({
+      "@type": "PostalAddress",
+      streetAddress: store.address.street,
+      addressLocality: store.address.city,
+      addressRegion: store.address.state,
+      postalCode: store.address.postalCode,
+      addressCountry: store.address.country,
+    });
+    expect(data.hasMap).toBe(googleMapsPlaceLink.href);
+    expect(data.hasMap).toContain("Bike+Center+Fartura");
+    expect(data.hasMap).toContain("0x94c1a51538905ff9:0x7771bcda03c58d75");
+    expect(data.hasMap).not.toContain("!9m1!1b1");
+    expect(data.hasMap).not.toContain("/place//");
+    expect(data.openingHoursSpecification).toEqual([
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "08:00",
+        closes: "18:00",
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: "Saturday",
+        opens: "08:00",
+        closes: "13:00",
+      },
+    ]);
+    expect(store.hours.sunday).toBe("Fechado");
+    expect(JSON.stringify(data.openingHoursSpecification)).not.toContain(
+      "Sunday",
+    );
   });
 
   it("declara og:image 1200×630 igual ao arquivo", () => {

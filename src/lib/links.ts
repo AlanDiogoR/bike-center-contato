@@ -19,6 +19,7 @@ export function formatBrMobileDisplay(phoneDigits: string): string {
 export const store = {
   name: "Bike Center Fartura",
   tagline: "Motos, bicicletas e acessórios em Fartura/SP",
+  footerTagline: "Motos, bicicletas, acessórios, peças e oficina em Fartura/SP",
   trustLine: "Há mais de 30 anos em Fartura",
   city: "Fartura",
   state: "SP",
@@ -37,6 +38,12 @@ export const store = {
     weekdayCloses: "18:00",
     saturdayOpens: "08:00",
     saturdayCloses: "13:00",
+    sunday: "Fechado",
+    rows: [
+      { days: "Seg–Sex", hours: "8h–18h" },
+      { days: "Sábado", hours: "8h–13h" },
+      { days: "Domingo", hours: "Fechado" },
+    ],
   },
   citation:
     "A Bike Center Fartura vende motos, bicicletas, acessórios e peças e tem oficina de motos em Fartura/SP, na Rua Mário Stella, 355, CEP 18870-712. Atende de segunda a sexta, das 8h às 18h, e aos sábados, das 8h às 13h. WhatsApp: (14) 99166-7793 e (14) 99632-5919.",
@@ -49,14 +56,18 @@ export const store = {
 export const whatsappSalesLinks = [
   {
     id: "claro",
-    label: "Conversar no Whats (Claro)",
+    carrier: "Claro",
+    footerLabel: "WhatsApp Claro",
+    label: "Conversar no WhatsApp (Claro)",
     href: buildWhatsAppHref(PHONE_CLARO),
     phoneDigits: PHONE_CLARO,
     phoneDisplay: formatBrMobileDisplay(PHONE_CLARO),
   },
   {
     id: "vivo",
-    label: "Conversar no Whats (Vivo)",
+    carrier: "Vivo",
+    footerLabel: "WhatsApp Vivo",
+    label: "Conversar no WhatsApp (Vivo)",
     href: buildWhatsAppHref(PHONE_VIVO),
     phoneDigits: PHONE_VIVO,
     phoneDisplay: formatBrMobileDisplay(PHONE_VIVO),
@@ -80,7 +91,7 @@ export const googleMapsLink = {
 
 export const googleMapsPlaceLink = {
   label: "Bike Center Fartura no Google Maps",
-  href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z",
+  href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m6!3m5!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!16s%2Fg%2F11c5bhrp_y",
 } as const;
 
 /** Avaliações oficiais da ficha no Google Maps (`!9m1!1b1` abre a aba de reviews). */

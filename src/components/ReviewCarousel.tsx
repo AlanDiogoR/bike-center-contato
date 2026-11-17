@@ -6,9 +6,9 @@ import {
   FaChevronRight,
   FaExternalLinkAlt,
   FaStar,
-  FaWhatsapp,
 } from "react-icons/fa";
-import { SiGooglemaps, SiMercadopago } from "react-icons/si";
+import { SiGooglemaps } from "react-icons/si";
+import { MercadoLivreIcon } from "@/components/BrandSymbols";
 import { googleReviewLink } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
 
@@ -107,11 +107,22 @@ function SiteSlide() {
             <StepBadge n="1" />
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-pine px-2 py-1.5 text-[9px] font-semibold text-white">
-            <FaWhatsapp className="h-3 w-3" aria-hidden />
-            Conversar no Whats
+            <svg
+              viewBox="0 0 720 720"
+              width="12"
+              height="12"
+              fill="currentColor"
+              className="h-3 w-3 shrink-0"
+              preserveAspectRatio="xMidYMid meet"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <use href="#icon-whatsapp" />
+            </svg>
+            Conversar no WhatsApp
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
-            <SiMercadopago className="h-3 w-3" style={{ color: "#3483FA" }} aria-hidden />
+            <MercadoLivreIcon className="h-3.5 w-3.5 shrink-0" />
             Loja no Mercado Livre
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
@@ -141,7 +152,7 @@ function MapsSlide() {
         </div>
         <div className="mt-2 rounded-t-2xl bg-white px-3 pt-2.5">
           <p className="text-[12px] font-bold">Bike Center Fartura</p>
-          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#E37400]">
+          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#B45309]">
             <FaStar className="h-3 w-3" aria-hidden />
             Avaliações da loja
           </p>
@@ -150,7 +161,7 @@ function MapsSlide() {
           </p>
           <div className="mt-2 flex gap-3 border-b border-zinc-200 text-[10px]">
             <span className="text-zinc-500">Visão geral</span>
-            <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1a73e8]">
+            <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1557B0]">
               Avaliações
               <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-sunset text-[9px] font-black text-ink">
                 2
@@ -176,7 +187,7 @@ function WriteReviewSlide() {
         <p className="px-3 text-[12px] font-bold">Avaliações</p>
         <p className="px-3 text-[9px] text-zinc-500">Bike Center Fartura</p>
         <div className="relative mx-3 mt-3 rounded-xl border-2 border-sunset bg-[#e8f0fe] px-3 py-3">
-          <p className="text-[11px] font-bold text-[#1a73e8]">
+          <p className="text-[11px] font-bold text-[#1557B0]">
             Escrever uma avaliação
           </p>
           <p className="mt-1 text-[9px] text-zinc-600">

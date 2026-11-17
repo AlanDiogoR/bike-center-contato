@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import HomePage from "@/app/page";
 import { LinksSection } from "./LinksSection";
 import {
   googleMapsLink,
@@ -12,7 +13,26 @@ vi.mock("@/lib/track", () => ({
   trackOutboundClick: vi.fn(),
 }));
 
+vi.mock("next/image", () => ({
+  default: ({
+    alt,
+    priority: _p,
+    ...props
+  }: {
+    alt: string;
+    src: string;
+    width?: number;
+    height?: number;
+    className?: string;
+    sizes?: string;
+  }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} {...props} />
+  ),
+}));
+
 const PLACA_CTA = "Avaliar no Google";
+const DEFAULT_REVIEW_ARIA = `Avalie no Google — ${store.name}`;
 const INCENTIVE =
   /brinde|pr[eê]mio|vip|cupom|desconto|sorteio|ganhe|oferta/i;
 
@@ -38,16 +58,25 @@ describe("LinksSection", () => {
     style.remove();
     document.documentElement.removeAttribute("data-utm-source");
   });
-  it("mantém os rótulos Claro/Vivo e preserva os hrefs", () => {
-    render(<LinksSection />);
+  it("mantém os rótulos Claro/Vivo com WhatsApp por extenso e preserva os hrefs", () => {
+    const { container } = render(<LinksSection />);
     const claro = screen.getByRole("link", {
-      name: "Conversar no Whats (Claro)",
+      name: "Conversar no WhatsApp (Claro)",
     });
     const vivo = screen.getByRole("link", {
-      name: "Conversar no Whats (Vivo)",
+      name: "Conversar no WhatsApp (Vivo)",
     });
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
+    expect(claro).toHaveAttribute("aria-label", "Conversar no WhatsApp (Claro)");
+    expect(vivo).toHaveAttribute("aria-label", "Conversar no WhatsApp (Vivo)");
+    expect(claro.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "(Claro)",
+    );
+    expect(vivo.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "(Vivo)",
+    );
+    expect(container.textContent).not.toMatch(/\bWhats\b/);
     expect(
       screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
     ).not.toBeInTheDocument();
@@ -67,7 +96,7 @@ describe("LinksSection", () => {
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
     expect(maps.getAttribute("href")).toContain("-49.5062797");
     const review = screen.getByRole("link", {
-      name: googleReviewLink.prominentLabel,
+      name: DEFAULT_REVIEW_ARIA,
     });
     expect(review).toHaveAttribute("href", googleReviewLink.href);
     expect(review.getAttribute("href")).toContain("Bike+Center+Fartura");
@@ -77,7 +106,7 @@ describe("LinksSection", () => {
   it("coloca a avaliação do Google antes do Pix e dos WhatsApps", () => {
     render(<LinksSection />);
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
+    expect(links[0]).toHaveAccessibleName(DEFAULT_REVIEW_ARIA);
     expect(links[0]).toHaveTextContent("Avalie no Google");
     expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
       "Avalie no Google",
@@ -86,11 +115,11 @@ describe("LinksSection", () => {
     expect(links[0].className).toMatch(/animate-pulse-review/);
     expect(links[0].className).toMatch(/motion-reduce:animate-none/);
     expect(
-      screen.getByRole("link", { name: "Conversar no Whats (Claro)" }).className,
+      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }).className,
     ).not.toMatch(/animate-pulse/);
     const pix = screen.getByRole("button", { name: "Pagar com Pix" });
     const claro = screen.getByRole("link", {
-      name: "Conversar no Whats (Claro)",
+      name: "Conversar no WhatsApp (Claro)",
     });
     expect(
       links[0].compareDocumentPosition(pix) & Node.DOCUMENT_POSITION_FOLLOWING,
@@ -124,7 +153,7 @@ describe("LinksSection", () => {
   it("sem utm_source=placa mantém o botão e o tutorial de hoje", () => {
     render(<LinksSection />);
     const review = screen.getByRole("link", {
-      name: googleReviewLink.prominentLabel,
+      name: DEFAULT_REVIEW_ARIA,
     });
     expect(review).toBeVisible();
     expect(review).toHaveAttribute("href", googleReviewLink.href);
@@ -167,7 +196,7 @@ describe("LinksSection", () => {
     expect(cta.textContent ?? "").not.toMatch(INCENTIVE);
 
     expect(
-      screen.queryByRole("link", { name: googleReviewLink.prominentLabel }),
+      screen.queryByRole("link", { name: DEFAULT_REVIEW_ARIA }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Como nos avaliar")).not.toBeVisible();
     expect(screen.getByText("Passo 1 de 4")).not.toBeVisible();
@@ -183,11 +212,58 @@ describe("LinksSection", () => {
     expect(original).toHaveTextContent("Avalie no Google");
     expect(original).toHaveAttribute(
       "aria-label",
-      googleReviewLink.prominentLabel,
+      DEFAULT_REVIEW_ARIA,
     );
     expect(original).toHaveAttribute("href", cta.getAttribute("href"));
     expect(
-      screen.getByRole("link", { name: "Conversar no Whats (Claro)" }),
+      screen.getByRole("link", { name: "Conversar no WhatsApp (Claro)" }),
     ).toBeVisible();
+  });
+
+  it("usa o símbolo único #icon-whatsapp (3 <use> no corpo + 2 no rodapé = 5) e o SVG oficial do Mercado Livre sem SiMercadopago", () => {
+    const { container } = render(<HomePage />);
+
+    const symbols = container.querySelectorAll("symbol#icon-whatsapp");
+    expect(symbols.length).toBe(1);
+    expect(symbols[0].getAttribute("viewBox")).toBe("0 0 720 720");
+
+    const allUses = container.querySelectorAll('use[href="#icon-whatsapp"]');
+    expect(allUses.length).toBe(5);
+
+    const footer = container.querySelector("footer");
+    expect(Boolean(footer)).toBe(true);
+    const footerUses = footer!.querySelectorAll('use[href="#icon-whatsapp"]');
+    expect(footerUses.length).toBe(2);
+    expect(allUses.length - footerUses.length).toBe(3);
+
+    const svgs = Array.from(container.querySelectorAll("svg"));
+    expect(container.innerHTML).not.toContain("#3483FA");
+    expect(
+      svgs.filter((s) => s.getAttribute("viewBox") === "0 0 163 113").length,
+    ).toBe(2);
+
+    const waLinks = container.querySelectorAll('a[href^="https://wa.me/"]');
+    expect(waLinks.length).toBe(4);
+    waLinks.forEach((a) => {
+      const aria = a.getAttribute("aria-label") ?? "";
+      expect(aria).toContain("WhatsApp");
+      expect(aria).not.toMatch(/\bWhats\b/);
+      const svg = a.querySelector("svg");
+      expect(svg?.getAttribute("viewBox")).toBe("0 0 720 720");
+      expect(Boolean(a.querySelector('use[href="#icon-whatsapp"]'))).toBe(true);
+    });
+
+    container.querySelectorAll("a[aria-label]").forEach((a) => {
+      const visible = (a.textContent ?? "").replace(/\s+/g, " ").trim();
+      const aria = (a.getAttribute("aria-label") ?? "").replace(/\s+/g, " ").trim();
+      expect(aria.startsWith(visible)).toBe(true);
+    });
+
+    container.querySelectorAll('a[href*="google.com/maps"]').forEach((a) => {
+      expect(a.getAttribute("href")).not.toContain("/maps/place//");
+      expect(a.getAttribute("href")).not.toContain("/place//");
+    });
+
+    expect(container.textContent).not.toMatch(/\bWhats\b/);
   });
 });
