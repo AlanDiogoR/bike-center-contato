@@ -79,7 +79,7 @@ const reviewCtas = [
   {
     placa: "hide",
     track: googleReviewLink.prominentLabel,
-    ariaLabel: googleReviewLink.prominentLabel,
+    ariaLabel: `Avalie no Google — ${store.name}`,
     size: "min-h-16 text-lg",
     text: "Avalie no Google",
   },
@@ -164,7 +164,10 @@ export function LinksSection() {
                 <use href="#icon-whatsapp" />
               </svg>
             </span>
-            <span className="flex-1 leading-snug">{link.label}</span>
+            <span className="flex-1 leading-snug">
+              Conversar no WhatsApp{" "}
+              <span className="whitespace-nowrap">({link.carrier})</span>
+            </span>
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
           </a>
         ))}

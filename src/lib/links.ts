@@ -91,7 +91,7 @@ export const googleMapsLink = {
 
 export const googleMapsPlaceLink = {
   label: "Bike Center Fartura no Google Maps",
-  href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z",
+  href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m6!3m5!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!16s%2Fg%2F11c5bhrp_y",
 } as const;
 
 /** Avaliações oficiais da ficha no Google Maps (`!9m1!1b1` abre a aba de reviews). */

@@ -73,6 +73,11 @@ describe("links", () => {
     expect(googleMapsLink.href.toLowerCase()).not.toContain("procopio");
     expect(googleMapsPlaceLink.href).toContain("Bike+Center+Fartura");
     expect(googleMapsPlaceLink.href).toContain("-23.3883268,-49.5062797");
+    expect(googleMapsPlaceLink.href).toContain(
+      "0x94c1a51538905ff9:0x7771bcda03c58d75",
+    );
+    expect(googleMapsPlaceLink.href).not.toContain("!9m1!1b1");
+    expect(googleMapsPlaceLink.href).not.toContain("/place//");
     expect(googleReviewLink.label).toBe("Nos avalie no Google");
     expect(googleReviewLink.prominentLabel).toBe(
       "Avalie a Bike Center no Google",

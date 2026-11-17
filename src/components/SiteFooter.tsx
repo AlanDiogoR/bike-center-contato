@@ -15,7 +15,6 @@ export function SiteFooter() {
         target="_blank"
         rel="noopener noreferrer"
         className="footer-card flex min-h-11 items-start gap-3 hover:[&_.maps-cta]:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-        aria-label={`Ver ${store.name} no Google Maps. ${store.address.napDisplay}`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -31,10 +30,10 @@ export function SiteFooter() {
         <span>
           <span className="block font-semibold leading-[1.35]">
             {store.address.street}
-          </span>
+          </span>{" "}
           <span className="mt-[0.15rem] block leading-[1.35] text-muted">
             CEP {store.address.postalCode} — {store.city}/{store.state}
-          </span>
+          </span>{" "}
           <span className="maps-cta mt-[0.4rem] block text-sm font-bold text-[#9a3412]">
             Ver no Google Maps
           </span>
@@ -65,7 +64,7 @@ export function SiteFooter() {
           target="_blank"
           rel="noopener noreferrer"
           className="footer-wa min-h-11"
-          aria-label={`${link.label} ${link.phoneDisplay}`}
+          aria-label={`${link.footerLabel} ${link.phoneDisplay}, abre conversa no WhatsApp`}
         >
           <span className="footer-wa-icon">
             <svg
@@ -84,7 +83,7 @@ export function SiteFooter() {
           <span className="flex min-w-0 flex-col leading-[1.25]">
             <span className="text-xs font-semibold tracking-[0.02em] text-white/[0.86]">
               {link.footerLabel}
-            </span>
+            </span>{" "}
             <span className="text-base font-bold text-white">
               {link.phoneDisplay}
             </span>

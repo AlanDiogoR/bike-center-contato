@@ -11,9 +11,16 @@ describe("SiteFooter", () => {
     expect(screen.getByText(store.footerTagline)).toBeInTheDocument();
 
     const mapsLink = screen.getByRole("link", {
-      name: `Ver ${store.name} no Google Maps. ${store.address.napDisplay}`,
+      name: `${store.address.street} CEP ${store.address.postalCode} — ${store.city}/${store.state} Ver no Google Maps`,
     });
     expect(mapsLink).toHaveAttribute("href", googleMapsPlaceLink.href);
+    expect(mapsLink.getAttribute("href")).toContain("Bike+Center+Fartura");
+    expect(mapsLink.getAttribute("href")).toContain(
+      "0x94c1a51538905ff9:0x7771bcda03c58d75",
+    );
+    expect(mapsLink.getAttribute("href")).not.toContain("!9m1!1b1");
+    expect(mapsLink.getAttribute("href")).not.toContain("/place//");
+    expect(mapsLink.getAttribute("href")).not.toContain("/maps/place//");
     expect(mapsLink.className).toMatch(/min-h-11/);
     expect(within(mapsLink).getByText(store.address.street)).toBeInTheDocument();
     expect(
@@ -32,7 +39,7 @@ describe("SiteFooter", () => {
     expect(within(hoursRegion).getByText("Fechado")).toBeInTheDocument();
 
     const claro = screen.getByRole("link", {
-      name: "Conversar no WhatsApp (Claro) (14) 99166-7793",
+      name: "WhatsApp Claro (14) 99166-7793, abre conversa no WhatsApp",
     });
     expect(claro).toHaveAttribute("href", whatsappSalesLinks[0].href);
     expect(claro.className).toMatch(/min-h-11/);
@@ -40,12 +47,18 @@ describe("SiteFooter", () => {
     expect(within(claro).getByText("(14) 99166-7793")).toBeInTheDocument();
 
     const vivo = screen.getByRole("link", {
-      name: "Conversar no WhatsApp (Vivo) (14) 99632-5919",
+      name: "WhatsApp Vivo (14) 99632-5919, abre conversa no WhatsApp",
     });
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(vivo.className).toMatch(/min-h-11/);
     expect(within(vivo).getByText("WhatsApp Vivo")).toBeInTheDocument();
     expect(within(vivo).getByText("(14) 99632-5919")).toBeInTheDocument();
+
+    container.querySelectorAll("a[aria-label]").forEach((a) => {
+      const visible = (a.textContent ?? "").replace(/\s+/g, " ").trim();
+      const aria = (a.getAttribute("aria-label") ?? "").replace(/\s+/g, " ").trim();
+      expect(aria.startsWith(visible)).toBe(true);
+    });
 
     expect(
       screen.getByText(`${store.name} © 2026 - Acelerando com você.`),

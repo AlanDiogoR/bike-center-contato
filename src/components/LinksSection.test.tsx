@@ -32,6 +32,7 @@ vi.mock("next/image", () => ({
 }));
 
 const PLACA_CTA = "Avaliar no Google";
+const DEFAULT_REVIEW_ARIA = `Avalie no Google — ${store.name}`;
 const INCENTIVE =
   /brinde|pr[eê]mio|vip|cupom|desconto|sorteio|ganhe|oferta/i;
 
@@ -69,6 +70,12 @@ describe("LinksSection", () => {
     expect(vivo).toHaveAttribute("href", whatsappSalesLinks[1].href);
     expect(claro).toHaveAttribute("aria-label", "Conversar no WhatsApp (Claro)");
     expect(vivo).toHaveAttribute("aria-label", "Conversar no WhatsApp (Vivo)");
+    expect(claro.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "(Claro)",
+    );
+    expect(vivo.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      "(Vivo)",
+    );
     expect(container.textContent).not.toMatch(/\bWhats\b/);
     expect(
       screen.queryByRole("link", { name: /Grupo WhatsApp/i }),
@@ -89,7 +96,7 @@ describe("LinksSection", () => {
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
     expect(maps.getAttribute("href")).toContain("-49.5062797");
     const review = screen.getByRole("link", {
-      name: googleReviewLink.prominentLabel,
+      name: DEFAULT_REVIEW_ARIA,
     });
     expect(review).toHaveAttribute("href", googleReviewLink.href);
     expect(review.getAttribute("href")).toContain("Bike+Center+Fartura");
@@ -99,7 +106,7 @@ describe("LinksSection", () => {
   it("coloca a avaliação do Google antes do Pix e dos WhatsApps", () => {
     render(<LinksSection />);
     const links = screen.getAllByRole("link");
-    expect(links[0]).toHaveAccessibleName(googleReviewLink.prominentLabel);
+    expect(links[0]).toHaveAccessibleName(DEFAULT_REVIEW_ARIA);
     expect(links[0]).toHaveTextContent("Avalie no Google");
     expect(links[0].querySelector(".whitespace-nowrap")).toHaveTextContent(
       "Avalie no Google",
@@ -146,7 +153,7 @@ describe("LinksSection", () => {
   it("sem utm_source=placa mantém o botão e o tutorial de hoje", () => {
     render(<LinksSection />);
     const review = screen.getByRole("link", {
-      name: googleReviewLink.prominentLabel,
+      name: DEFAULT_REVIEW_ARIA,
     });
     expect(review).toBeVisible();
     expect(review).toHaveAttribute("href", googleReviewLink.href);
@@ -189,7 +196,7 @@ describe("LinksSection", () => {
     expect(cta.textContent ?? "").not.toMatch(INCENTIVE);
 
     expect(
-      screen.queryByRole("link", { name: googleReviewLink.prominentLabel }),
+      screen.queryByRole("link", { name: DEFAULT_REVIEW_ARIA }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Como nos avaliar")).not.toBeVisible();
     expect(screen.getByText("Passo 1 de 4")).not.toBeVisible();
@@ -205,7 +212,7 @@ describe("LinksSection", () => {
     expect(original).toHaveTextContent("Avalie no Google");
     expect(original).toHaveAttribute(
       "aria-label",
-      googleReviewLink.prominentLabel,
+      DEFAULT_REVIEW_ARIA,
     );
     expect(original).toHaveAttribute("href", cta.getAttribute("href"));
     expect(
@@ -244,6 +251,17 @@ describe("LinksSection", () => {
       const svg = a.querySelector("svg");
       expect(svg?.getAttribute("viewBox")).toBe("0 0 720 720");
       expect(Boolean(a.querySelector('use[href="#icon-whatsapp"]'))).toBe(true);
+    });
+
+    container.querySelectorAll("a[aria-label]").forEach((a) => {
+      const visible = (a.textContent ?? "").replace(/\s+/g, " ").trim();
+      const aria = (a.getAttribute("aria-label") ?? "").replace(/\s+/g, " ").trim();
+      expect(aria.startsWith(visible)).toBe(true);
+    });
+
+    container.querySelectorAll('a[href*="google.com/maps"]').forEach((a) => {
+      expect(a.getAttribute("href")).not.toContain("/maps/place//");
+      expect(a.getAttribute("href")).not.toContain("/place//");
     });
 
     expect(container.textContent).not.toMatch(/\bWhats\b/);

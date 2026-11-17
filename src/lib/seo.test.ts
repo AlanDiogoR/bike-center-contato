@@ -45,6 +45,10 @@ describe("SEO local", () => {
       longitude: store.geo.longitude,
     });
     expect(data.hasMap).toBe(googleMapsPlaceLink.href);
+    expect(data.hasMap).toContain("Bike+Center+Fartura");
+    expect(data.hasMap).toContain("0x94c1a51538905ff9:0x7771bcda03c58d75");
+    expect(data.hasMap).not.toContain("!9m1!1b1");
+    expect(data.hasMap).not.toContain("/place//");
     expect(data.sameAs).toContain("https://www.instagram.com/bikecenterfartura");
     expect(data.sameAs).toContain(
       "https://www.facebook.com/profile.php?id=61576748073943",
@@ -74,6 +78,10 @@ describe("SEO local", () => {
       addressCountry: store.address.country,
     });
     expect(data.hasMap).toBe(googleMapsPlaceLink.href);
+    expect(data.hasMap).toContain("Bike+Center+Fartura");
+    expect(data.hasMap).toContain("0x94c1a51538905ff9:0x7771bcda03c58d75");
+    expect(data.hasMap).not.toContain("!9m1!1b1");
+    expect(data.hasMap).not.toContain("/place//");
     expect(data.openingHoursSpecification).toEqual([
       {
         "@type": "OpeningHoursSpecification",
