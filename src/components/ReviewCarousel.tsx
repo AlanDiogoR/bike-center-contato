@@ -152,7 +152,7 @@ function MapsSlide() {
         </div>
         <div className="mt-2 rounded-t-2xl bg-white px-3 pt-2.5">
           <p className="text-[12px] font-bold">Bike Center Fartura</p>
-          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#E37400]">
+          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#B45309]">
             <FaStar className="h-3 w-3" aria-hidden />
             Avaliações da loja
           </p>
@@ -161,7 +161,7 @@ function MapsSlide() {
           </p>
           <div className="mt-2 flex gap-3 border-b border-zinc-200 text-[10px]">
             <span className="text-zinc-500">Visão geral</span>
-            <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1a73e8]">
+            <span className="relative border-b-2 border-[#1a73e8] pb-1 font-bold text-[#1557B0]">
               Avaliações
               <span className="absolute -right-3 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-sunset text-[9px] font-black text-ink">
                 2
@@ -187,7 +187,7 @@ function WriteReviewSlide() {
         <p className="px-3 text-[12px] font-bold">Avaliações</p>
         <p className="px-3 text-[9px] text-zinc-500">Bike Center Fartura</p>
         <div className="relative mx-3 mt-3 rounded-xl border-2 border-sunset bg-[#e8f0fe] px-3 py-3">
-          <p className="text-[11px] font-bold text-[#1a73e8]">
+          <p className="text-[11px] font-bold text-[#1557B0]">
             Escrever uma avaliação
           </p>
           <p className="mt-1 text-[9px] text-zinc-600">
