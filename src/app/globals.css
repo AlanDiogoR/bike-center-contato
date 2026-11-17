@@ -59,6 +59,10 @@ html:not([data-utm-source="placa"]) [data-placa="show"] {
   display: none;
 }
 
+html:not([data-utm-source="placa"]) .cta-wa {
+  order: -1;
+}
+
 html[data-utm-source="placa"] [data-placa="hide"] {
   display: none;
 }
