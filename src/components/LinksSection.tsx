@@ -46,7 +46,11 @@ function SocialIcon({ kind }: { kind: (typeof socialLinks)[number]["icon"] }) {
   }
 }
 
-function PixButton() {
+function PixButton({
+  "data-placa": dataPlaca,
+}: {
+  "data-placa"?: "show" | "hide";
+} = {}) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -55,6 +59,7 @@ function PixButton() {
       <button
         ref={triggerRef}
         type="button"
+        data-placa={dataPlaca}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
@@ -75,57 +80,41 @@ function PixButton() {
   );
 }
 
-const reviewCtas = [
-  {
-    placa: "hide",
-    track: googleReviewLink.prominentLabel,
-    ariaLabel: `Avalie no Google — ${store.name}`,
-    size: "min-h-16 text-lg",
-    text: "Avalie no Google",
-  },
-  {
-    placa: "show",
-    track: "Avaliar no Google",
-    ariaLabel: undefined,
-    size: "min-h-24 text-2xl text-[clamp(1.125rem,6.2vw,1.5rem)] max-[359px]:gap-2.5 max-[359px]:px-3.5",
-    text: "Avaliar no Google",
-  },
-] as const;
-
 export function LinksSection() {
   return (
     <div className="mx-auto w-full max-w-md px-1 pb-10 pt-2">
       <div className="flex flex-col gap-3">
-        {reviewCtas.map((cta) => (
-          <a
-            key={cta.placa}
-            href={googleReviewLink.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-placa={cta.placa}
-            aria-label={cta.ariaLabel}
-            onClick={() =>
-              trackOutboundClick(cta.track, googleReviewLink.href, "review")
-            }
-            className={`animate-pulse-review motion-reduce:animate-none flex w-full min-w-0 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left font-bold text-ink ring-2 ring-sunset ${focusRing} ${cta.size}`}
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
-              <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
-              {cta.text}
-            </span>
-            <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
-          </a>
-        ))}
+        <a
+          href={googleReviewLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-placa="show"
+          onClick={() =>
+            trackOutboundClick(
+              "Avaliar no Google",
+              googleReviewLink.href,
+              "review",
+            )
+          }
+          className={`animate-pulse-review motion-reduce:animate-none flex w-full min-w-0 items-center gap-4 rounded-2xl bg-sun px-5 py-5 text-left font-bold text-ink ring-2 ring-sunset ${focusRing} min-h-24 text-2xl text-[clamp(1.125rem,6.2vw,1.5rem)] max-[359px]:gap-2.5 max-[359px]:px-3.5`}
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
+            <FaStar className="h-7 w-7 text-[#9a3412]" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
+            Avaliar no Google
+          </span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-ink" aria-hidden />
+        </a>
 
-        <PixButton />
+        <PixButton data-placa="show" />
 
         {highlightOffer.enabled ? (
           <a
             href={highlightOffer.href}
             target="_blank"
             rel="noopener noreferrer"
+            data-placa="show"
             onClick={() =>
               trackOutboundClick(
                 highlightOffer.label,
@@ -171,6 +160,52 @@ export function LinksSection() {
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
           </a>
         ))}
+
+        <PixButton data-placa="hide" />
+
+        {highlightOffer.enabled ? (
+          <a
+            href={highlightOffer.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-placa="hide"
+            onClick={() =>
+              trackOutboundClick(
+                highlightOffer.label,
+                highlightOffer.href,
+                "highlight",
+              )
+            }
+            className={`flex min-h-14 items-center gap-4 rounded-2xl bg-sunset px-5 py-4 text-left text-base font-bold text-ink ${focusRing}`}
+          >
+            <span className="flex-1 leading-snug">{highlightOffer.label}</span>
+            <FaExternalLinkAlt className="h-5 w-5 shrink-0" aria-hidden />
+          </a>
+        ) : null}
+
+        <a
+          href={googleReviewLink.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-placa="hide"
+          aria-label={`Avalie no Google — ${store.name}`}
+          onClick={() =>
+            trackOutboundClick(
+              googleReviewLink.prominentLabel,
+              googleReviewLink.href,
+              "review",
+            )
+          }
+          className={`flex min-h-14 w-full min-w-0 items-center gap-4 rounded-2xl bg-white px-5 py-4 text-left text-base font-semibold text-ink ring-1 ring-[#ead7b8] ${focusRing}`}
+        >
+          <span className="cta-card-icon">
+            <FaStar className="h-6 w-6 text-[#9a3412]" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
+            Avalie no Google
+          </span>
+          <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+        </a>
 
         <a
           href={mercadoLivreLink.href}
