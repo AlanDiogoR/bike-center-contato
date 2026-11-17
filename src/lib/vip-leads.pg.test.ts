@@ -229,16 +229,24 @@ describe.skipIf(devePularPg(bin))(
           "select count(*) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
         ),
       );
-      expect(policies).toBe("4");
+      expect(policies).toBe("5");
 
       const cmdsPolicies = valor(
         psql(
-          "select string_agg(cmd || ':' || array_to_string(roles, ','), '|' order by cmd) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
+          "select string_agg(cmd || ':' || array_to_string(roles, ','), '|' order by cmd, array_to_string(roles, ',')) from pg_policies where schemaname = 'public' and tablename = 'vip_leads'",
         ),
       );
       expect(cmdsPolicies).toBe(
-        "DELETE:authenticated|INSERT:public|SELECT:authenticated|UPDATE:authenticated",
+        "DELETE:authenticated|INSERT:public|SELECT:authenticated|SELECT:public|UPDATE:authenticated",
       );
+
+      // A policy de SELECT do definer usa o MESMO predicado de role da policy de INSERT do definer
+      const predicadosDefiner = valor(
+        psql(
+          "select (s.qual = regexp_replace(i.with_check, '\\s+AND \\(opted_out_at IS NULL\\)\\)$', ')'))::text || ':' || (s.qual ~ 'anon' and s.qual ~ 'authenticated' and s.qual ~ 'relowner' and s.qual ~ 'proowner')::text from pg_policies s, pg_policies i where s.tablename = 'vip_leads' and s.policyname = 'vip_leads_definer_select' and i.tablename = 'vip_leads' and i.policyname = 'vip_leads_definer_insert'",
+        ),
+      );
+      expect(predicadosDefiner).toBe("true:true");
 
       // As 3 policies de admin usam exclusivamente public.is_vip_admin()
       const policiesAdmin = valor(
@@ -954,6 +962,95 @@ describe.skipIf(devePularPg(bin))(
           }),
         ),
       ).toBe("0");
+    });
+
+    test("policy vip_leads_definer_select: com dono não-superuser e FORCE RLS, 2 chamadas da RPC com o mesmo número não dão erro e mantêm 1 linha; anon/authenticated não-admin seguem vendo 0 linhas", () => {
+      // Pré-condição: o teste anterior já transferiu tabela e funções para vip_owner (nosuperuser, nobypassrls)
+      expect(
+        valor(
+          psql(
+            "select pg_get_userbyid(c.relowner) || ':' || r.rolsuper::text || ':' || r.rolbypassrls::text || ':' || c.relforcerowsecurity::text from pg_class c join pg_roles r on r.oid = c.relowner where c.oid = 'public.vip_leads'::regclass",
+          ),
+        ),
+      ).toBe("vip_owner:false:false:true");
+
+      // A policy existe, é FOR SELECT e não é direcionada a anon/authenticated
+      expect(
+        valor(
+          psql(
+            "select cmd || ':' || array_to_string(roles, ',') from pg_policies where schemaname = 'public' and tablename = 'vip_leads' and policyname = 'vip_leads_definer_select'",
+          ),
+        ),
+      ).toBe("SELECT:public");
+
+      const numero = "+5514996660009";
+      const chamada = (nome: string) =>
+        comoAnon(
+          `select public.vip_lead_signup('${nome}', '${numero}', 'bike', 'v1')`,
+        );
+
+      const r1 = chamada("Primeira Chamada");
+      ok(r1);
+      const r2 = chamada("Segunda Chamada");
+      ok(r2);
+      expect(r2.stdout).toBe(r1.stdout);
+      expect(r2.stderr).toBe(r1.stderr);
+
+      expect(
+        valor(
+          psql(
+            `select count(*) || ':' || max(nome) from public.vip_leads where whatsapp_e164 = '${numero}'`,
+          ),
+        ),
+      ).toBe("1:Primeira Chamada");
+
+      // O próprio dono (vip_owner) enxerga as linhas via policy de SELECT do definer sob FORCE RLS
+      expect(
+        valor(
+          psql(
+            `begin; set local role vip_owner; select count(*) from public.vip_leads where whatsapp_e164 = '${numero}'; rollback;`,
+          ),
+        ),
+      ).toBe("1");
+
+      // anon segue sem privilégio de SELECT; mesmo com GRANT (rollback) a RLS devolve 0 linhas
+      negado(
+        comoAnon("select count(*) from public.vip_leads"),
+        /permission denied for table vip_leads/,
+      );
+      expect(
+        valor(
+          psql(`
+            begin;
+            grant select on table public.vip_leads to anon;
+            set local role anon;
+            set local request.jwt.claims = '{"role":"anon"}';
+            select count(*) from public.vip_leads;
+            rollback;
+          `),
+        ),
+      ).toBe("0");
+
+      // authenticated não-admin (outro usuário, uid inexistente ou e-mail do admin forjado) vê 0 linhas
+      expect(
+        valor(
+          comoAuth(OUTRO_EMAIL, "select count(*) from public.vip_leads", {
+            uid: OUTRO_UID,
+          }),
+        ),
+      ).toBe("0");
+      expect(
+        valor(
+          comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads", {
+            uid: SEM_LINHA_UID,
+          }),
+        ),
+      ).toBe("0");
+
+      // Admin confirmado continua vendo todas as linhas
+      expect(
+        valor(comoAuth(ADMIN_EMAIL, "select count(*) from public.vip_leads")),
+      ).toBe("3");
     });
   },
 );

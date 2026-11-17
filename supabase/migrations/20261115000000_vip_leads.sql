@@ -189,6 +189,37 @@ create policy vip_leads_definer_insert
 comment on policy vip_leads_definer_insert on public.vip_leads is
   'Permite INSERT sob FORCE RLS exclusivamente ao role definer/dono da tabela e da RPC vip_lead_signup (nunca para anon ou authenticated).';
 
+-- Policy de SELECT restrita ao dono (definer) da tabela/RPC, com o MESMO predicado de role
+-- da vip_leads_definer_insert. Motivo: sob FORCE ROW LEVEL SECURITY e com dono sem superuser
+-- e sem BYPASSRLS, o INSERT ... ON CONFLICT DO NOTHING da public.vip_lead_signup precisa
+-- enxergar a linha já existente para detectar o conflito de forma determinística, sem
+-- depender de comportamento implícito do RLS entre versões do Postgres. Sem opted_out_at no
+-- predicado: o conflito precisa ser detectado também para linhas com opt-out.
+-- NUNCA libera SELECT para anon/authenticated (current_user dentro da RPC é o definer;
+-- fora dela, anon/authenticated são excluídos explicitamente e não são donos).
+drop policy if exists vip_leads_definer_select on public.vip_leads;
+create policy vip_leads_definer_select
+  on public.vip_leads
+  for select
+  using (
+    current_user not in ('anon', 'authenticated')
+    and current_user in (
+      (
+        select pg_catalog.pg_get_userbyid(c.relowner)
+        from pg_catalog.pg_class c
+        where c.oid = 'public.vip_leads'::pg_catalog.regclass
+      ),
+      (
+        select pg_catalog.pg_get_userbyid(p.proowner)
+        from pg_catalog.pg_proc p
+        where p.oid = 'public.vip_lead_signup(text,text,text,text,text,text)'::pg_catalog.regprocedure
+      )
+    )
+  );
+
+comment on policy vip_leads_definer_select on public.vip_leads is
+  'Permite SELECT sob FORCE RLS exclusivamente ao role definer/dono da tabela e da RPC vip_lead_signup, para o ON CONFLICT DO NOTHING (nunca para anon ou authenticated).';
+
 -- Policy de SELECT: somente o administrador confirmado em auth.users via public.is_vip_admin().
 drop policy if exists vip_leads_admin_select on public.vip_leads;
 create policy vip_leads_admin_select
