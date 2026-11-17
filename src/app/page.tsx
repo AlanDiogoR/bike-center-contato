@@ -1,3 +1,4 @@
+import { WhatsAppSymbol } from "@/components/BrandSymbols";
 import { LinksSection } from "@/components/LinksSection";
 import { Logo } from "@/components/Logo";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -14,6 +15,7 @@ export default function HomePage() {
         <div className="w-full flex-1">
           <LinksSection />
         </div>
+        <WhatsAppSymbol />
         <SiteFooter />
       </div>
     </main>

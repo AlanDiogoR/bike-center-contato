@@ -7,15 +7,14 @@ import {
   FaMapMarkerAlt,
   FaQrcode,
   FaStar,
-  FaWhatsapp,
 } from "react-icons/fa";
 import {
   SiFacebook,
   SiGooglemaps,
   SiInstagram,
-  SiMercadopago,
   SiTiktok,
 } from "react-icons/si";
+import { MercadoLivreIcon } from "@/components/BrandSymbols";
 import { PixModal } from "@/components/PixModal";
 import {
   googleMapsLink,
@@ -147,11 +146,23 @@ export function LinksSection() {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={link.label}
             onClick={() => trackOutboundClick(link.label, link.href, "whatsapp")}
-            className={`flex min-h-14 items-center gap-4 rounded-2xl bg-pine px-5 py-4 text-left text-base font-semibold text-white ${focusRing}`}
+            className="cta-wa min-h-14"
           >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
-              <FaWhatsapp className="h-7 w-7 text-white" aria-hidden />
+            <span className="cta-wa-icon">
+              <svg
+                viewBox="0 0 720 720"
+                width="24"
+                height="24"
+                fill="currentColor"
+                className="h-6 w-6 text-white"
+                preserveAspectRatio="xMidYMid meet"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <use href="#icon-whatsapp" />
+              </svg>
             </span>
             <span className="flex-1 leading-snug">{link.label}</span>
             <FaExternalLinkAlt className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
@@ -169,10 +180,10 @@ export function LinksSection() {
               "mercado_livre",
             )
           }
-          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-[#ead7b8] bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
+          className="cta-card min-h-14"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-paper">
-            <SiMercadopago className="h-8 w-8" style={{ color: "#3483FA" }} aria-hidden />
+          <span className="cta-card-icon">
+            <MercadoLivreIcon className="h-8 w-8 shrink-0" />
           </span>
           <span className="flex-1 leading-snug">{mercadoLivreLink.label}</span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -205,9 +216,9 @@ export function LinksSection() {
           onClick={() =>
             trackOutboundClick(googleMapsLink.label, googleMapsLink.href, "maps")
           }
-          className={`flex min-h-14 items-center gap-4 rounded-2xl border border-[#ead7b8] bg-white px-5 py-4 text-left text-base font-semibold text-ink ${focusRing}`}
+          className="cta-card min-h-14"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-paper">
+          <span className="cta-card-icon">
             <SiGooglemaps className="h-8 w-8" style={{ color: "#1a73e8" }} aria-hidden />
           </span>
           <span className="flex-1 leading-snug">{googleMapsLink.label}</span>
@@ -232,7 +243,7 @@ export function LinksSection() {
             rel="noopener noreferrer"
             aria-label={`${link.shortLabel}. ${link.label}`}
             onClick={() => trackOutboundClick(link.label, link.href, "social")}
-            className={`flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#ead7b8] bg-white px-2 py-3 text-center text-ink ${focusRing}`}
+            className="social-card"
           >
             <SocialIcon kind={link.icon} />
             <span className="text-xs font-semibold leading-tight text-ink">

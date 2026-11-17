@@ -6,9 +6,9 @@ import {
   FaChevronRight,
   FaExternalLinkAlt,
   FaStar,
-  FaWhatsapp,
 } from "react-icons/fa";
-import { SiGooglemaps, SiMercadopago } from "react-icons/si";
+import { SiGooglemaps } from "react-icons/si";
+import { MercadoLivreIcon } from "@/components/BrandSymbols";
 import { googleReviewLink } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
 
@@ -107,11 +107,22 @@ function SiteSlide() {
             <StepBadge n="1" />
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-pine px-2 py-1.5 text-[9px] font-semibold text-white">
-            <FaWhatsapp className="h-3 w-3" aria-hidden />
-            Conversar no Whats
+            <svg
+              viewBox="0 0 720 720"
+              width="12"
+              height="12"
+              fill="currentColor"
+              className="h-3 w-3 shrink-0"
+              preserveAspectRatio="xMidYMid meet"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <use href="#icon-whatsapp" />
+            </svg>
+            Conversar no WhatsApp
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
-            <SiMercadopago className="h-3 w-3" style={{ color: "#3483FA" }} aria-hidden />
+            <MercadoLivreIcon className="h-3.5 w-3.5 shrink-0" />
             Loja no Mercado Livre
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-[#ead7b8] bg-white px-2 py-1.5 text-[9px] font-semibold text-ink">
