@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HomePage from "@/app/page";
 import { LinksSection } from "./LinksSection";
@@ -9,6 +9,7 @@ import {
   store,
   whatsappSalesLinks,
 } from "@/lib/links";
+import { trackOutboundClick } from "@/lib/track";
 
 vi.mock("@/lib/track", () => ({
   trackOutboundClick: vi.fn(),
@@ -103,8 +104,33 @@ describe("LinksSection", () => {
     render(<LinksSection />);
     expect(screen.getByText("Loja física")).toBeInTheDocument();
     expect(screen.getByText(store.address.display)).toBeInTheDocument();
-    expect(screen.getByText(store.hours.display)).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "Loja física" });
+    const hours = within(card).getByRole("list", { name: "Horários" });
+    const rows = within(hours).getAllByRole("listitem");
+    expect(rows.map((li) => li.textContent)).toEqual([
+      "Seg–Sex8h–18h",
+      "Sábado8h–13h",
+      "DomingoFechado",
+    ]);
+    expect(rows.map((li) => li.textContent)).toEqual(
+      store.hours.rows.map((r) => `${r.days}${r.hours}`),
+    );
+    expect(within(card).queryByText(store.hours.display)).not.toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
+    expect(
+      screen.getByRole("link", { name: "Como chegar — Google Maps" }),
+    ).toBe(maps);
+    expect(maps).toHaveAttribute("aria-label", "Como chegar — Google Maps");
+    expect(maps).toHaveAccessibleName("Como chegar — Google Maps");
+    expect(maps.textContent?.replace(/\s+/g, " ").trim()).toBe(
+      "Como chegar — Google Maps",
+    );
+    const brand = maps.querySelector(".whitespace-nowrap");
+    expect(brand).toHaveTextContent(/^Google Maps$/);
+    expect(brand?.tagName).toBe("SPAN");
+    expect(googleMapsLink.label).toBe(
+      `${googleMapsLink.action} — ${googleMapsLink.brand}`,
+    );
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
     expect(maps.getAttribute("href")).toContain("-49.5062797");
@@ -172,6 +198,68 @@ describe("LinksSection", () => {
     ).toBeTruthy();
   });
 
+  it("usa o rótulo único “Avalie no Google” no botão da home padrão, no mock do passo 1 e na legenda", () => {
+    render(<LinksSection />);
+    expect(googleReviewLink.label).toBe("Avalie no Google");
+    const review = screen.getByRole("link", { name: DEFAULT_REVIEW_ARIA });
+    expect(review.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      googleReviewLink.label,
+    );
+    fireEvent.click(review);
+    expect(trackOutboundClick).toHaveBeenCalledWith(
+      googleReviewLink.label,
+      googleReviewLink.href,
+      "review",
+    );
+    // link_label do botão da home (GTM) é distinto do CTA final do carrossel.
+    expect(trackOutboundClick).toHaveBeenLastCalledWith(
+      "Avalie no Google",
+      googleReviewLink.href,
+      "review",
+    );
+    expect(googleReviewLink.carouselLabel).toBe("Avaliar agora no Google");
+    expect(googleReviewLink.carouselLabel).not.toBe(googleReviewLink.label);
+    const tutorial = screen.getByRole("region", {
+      name: "Passo a passo para avaliar no Google",
+    });
+    expect(within(tutorial).getByText(googleReviewLink.label)).toBeVisible();
+    expect(
+      within(tutorial).getByText("No site, toque no botão “Avalie no Google”."),
+    ).toBeVisible();
+    expect(document.body.textContent).not.toMatch(
+      /Avalie a Bike Center no Google|Nos avalie no Google/,
+    );
+    // CTA grande da variante placa permanece igual.
+    expect(document.querySelector('a[data-placa="show"]')).toHaveTextContent(
+      PLACA_CTA,
+    );
+  });
+
+  it("usa o mesmo critério nos três ícones de rede: monocromático na cor oficial sólida, sem degradê", () => {
+    render(<LinksSection />);
+    const expected = {
+      "Estoque no Instagram": ["instagram", "rgb(193, 53, 132)"],
+      "Vídeos no TikTok": ["tiktok", "rgb(23, 21, 22)"],
+      "Página no Facebook": ["facebook", "rgb(24, 119, 242)"],
+    } as const;
+    for (const [name, [kind, color]] of Object.entries(expected)) {
+      const link = screen.getByRole("link", { name });
+      const svgs = link.querySelectorAll("svg");
+      expect(svgs).toHaveLength(1);
+      const svg = svgs[0];
+      expect(svg).toHaveAttribute("data-icon", kind);
+      expect(svg).toHaveAttribute("fill", "currentColor");
+      expect(svg.style.color).toBe(color);
+      expect(svg.className.baseVal).toBe("h-6 w-6 shrink-0");
+      expect(
+        svg.querySelectorAll("linearGradient, radialGradient, [fill^='url(']"),
+      ).toHaveLength(0);
+      svg.querySelectorAll("path").forEach((path) => {
+        expect(path.getAttribute("fill")).toBeNull();
+      });
+    }
+  });
+
   it("não renderiza oferta no topo quando o slot está vazio", () => {
     render(<LinksSection />);
     expect(screen.queryByRole("link", { name: /oferta/i })).not.toBeInTheDocument();
@@ -179,18 +267,33 @@ describe("LinksSection", () => {
 
   it("compacta as redes sociais em uma fileira com os destinos originais", () => {
     render(<LinksSection />);
-    expect(
-      screen.getByRole("link", { name: /Nosso Estoque no Instagram/ }),
-    ).toHaveAttribute("href", "https://www.instagram.com/bikecenterfartura");
-    expect(
-      screen.getByRole("link", { name: /Acelere com a gente no TikTok/ }),
-    ).toHaveAttribute("href", "https://www.tiktok.com/@bikecenterfartura");
-    expect(
-      screen.getByRole("link", { name: /Siga nossa Página/ }),
-    ).toHaveAttribute(
+    const instagram = screen.getByRole("link", { name: "Estoque no Instagram" });
+    const tiktok = screen.getByRole("link", { name: "Vídeos no TikTok" });
+    const facebook = screen.getByRole("link", { name: "Página no Facebook" });
+    expect(instagram).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/bikecenterfartura",
+    );
+    expect(tiktok).toHaveAttribute(
+      "href",
+      "https://www.tiktok.com/@bikecenterfartura",
+    );
+    expect(facebook).toHaveAttribute(
       "href",
       "https://www.facebook.com/profile.php?id=61576748073943",
     );
+    for (const [link, text] of [
+      [instagram, "Estoque no Instagram"],
+      [tiktok, "Vídeos no TikTok"],
+      [facebook, "Página no Facebook"],
+    ] as const) {
+      expect(link).toHaveTextContent(text);
+      expect(link.textContent?.trim()).toBe(text);
+      expect(link.getAttribute("aria-label")?.startsWith(text)).toBe(true);
+    }
+    expect(
+      screen.queryByText(/Nosso Estoque|Acelere com a gente|Siga nossa Página/),
+    ).not.toBeInTheDocument();
   });
 
   it("sem utm_source=placa mantém o botão de avaliação visível (sem pulso) e o tutorial", () => {

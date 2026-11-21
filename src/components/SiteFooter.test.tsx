@@ -31,6 +31,11 @@ describe("SiteFooter", () => {
     expect(within(mapsLink).getByText("Ver no Google Maps")).toBeInTheDocument();
 
     const hoursRegion = screen.getByRole("region", { name: "Horários" });
+    expect(
+      within(hoursRegion)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["Seg–Sex8h–18h", "Sábado8h–13h", "DomingoFechado"]);
     expect(within(hoursRegion).getByText("Seg–Sex")).toBeInTheDocument();
     expect(within(hoursRegion).getByText("8h–18h")).toBeInTheDocument();
     expect(within(hoursRegion).getByText("Sábado")).toBeInTheDocument();

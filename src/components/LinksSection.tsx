@@ -32,18 +32,32 @@ import { ReviewCarousel } from "@/components/ReviewCarousel";
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
+/**
+ * Critério único dos ícones de rede: glifo monocromático (Simple Icons) na cor
+ * oficial sólida de cada marca. Sem degradê, sem fundo e sem cor por variante.
+ */
+const SOCIAL_ICON_COLORS = {
+  instagram: "#C13584",
+  tiktok: "#171516",
+  facebook: "#1877F2",
+} as const;
+
+const SOCIAL_ICONS = {
+  instagram: SiInstagram,
+  tiktok: SiTiktok,
+  facebook: SiFacebook,
+} as const;
+
 function SocialIcon({ kind }: { kind: (typeof socialLinks)[number]["icon"] }) {
-  const className = "h-6 w-6 shrink-0";
-  switch (kind) {
-    case "instagram":
-      return <SiInstagram className={className} style={{ color: "#C13584" }} aria-hidden />;
-    case "tiktok":
-      return <SiTiktok className={className} style={{ color: "#171516" }} aria-hidden />;
-    case "facebook":
-      return <SiFacebook className={className} style={{ color: "#1877F2" }} aria-hidden />;
-    default:
-      return null;
-  }
+  const Icon = SOCIAL_ICONS[kind];
+  return (
+    <Icon
+      className="h-6 w-6 shrink-0"
+      style={{ color: SOCIAL_ICON_COLORS[kind] }}
+      data-icon={kind}
+      aria-hidden
+    />
+  );
 }
 
 function PixButton({
@@ -188,10 +202,10 @@ export function LinksSection() {
           target="_blank"
           rel="noopener noreferrer"
           data-placa="hide"
-          aria-label={`Avalie no Google — ${store.name}`}
+          aria-label={`${googleReviewLink.label} — ${store.name}`}
           onClick={() =>
             trackOutboundClick(
-              googleReviewLink.prominentLabel,
+              googleReviewLink.label,
               googleReviewLink.href,
               "review",
             )
@@ -202,7 +216,7 @@ export function LinksSection() {
             <FaStar className="h-6 w-6 text-[#9a3412]" aria-hidden />
           </span>
           <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
-            Avalie no Google
+            {googleReviewLink.label}
           </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
@@ -241,16 +255,24 @@ export function LinksSection() {
             <FaMapMarkerAlt className="mt-1 h-4 w-4 shrink-0 text-[#9a3412]" aria-hidden />
             <span>{store.address.display}</span>
           </p>
-          <p className="mt-2.5 flex items-start gap-3 text-base font-medium leading-snug text-ink">
+          <div className="mt-2.5 flex items-start gap-3 text-base font-medium leading-snug text-ink">
             <FaClock className="mt-1 h-4 w-4 shrink-0 text-muted" aria-hidden />
-            <span>{store.hours.display}</span>
-          </p>
+            <ul className="min-w-0 flex-1" aria-label="Horários">
+              {store.hours.rows.map((row) => (
+                <li key={row.days} className="flex justify-between gap-3">
+                  <span>{row.days}</span>
+                  <span className="font-semibold">{row.hours}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <a
           href={googleMapsLink.href}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={googleMapsLink.label}
           onClick={() =>
             trackOutboundClick(googleMapsLink.label, googleMapsLink.href, "maps")
           }
@@ -259,7 +281,10 @@ export function LinksSection() {
           <span className="cta-card-icon">
             <SiGooglemaps className="h-8 w-8" style={{ color: "#1a73e8" }} aria-hidden />
           </span>
-          <span className="flex-1 leading-snug">{googleMapsLink.label}</span>
+          <span className="flex-1 leading-snug">
+            {googleMapsLink.action} —{" "}
+            <span className="whitespace-nowrap">{googleMapsLink.brand}</span>
+          </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
       </div>
@@ -279,13 +304,13 @@ export function LinksSection() {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${link.shortLabel}. ${link.label}`}
+            aria-label={link.label}
             onClick={() => trackOutboundClick(link.label, link.href, "social")}
             className="social-card"
           >
             <SocialIcon kind={link.icon} />
             <span className="text-xs font-semibold leading-tight text-ink">
-              {link.shortLabel}
+              {link.label}
             </span>
           </a>
         ))}

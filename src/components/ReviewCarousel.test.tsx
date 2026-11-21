@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ReviewCarousel } from "./ReviewCarousel";
 import { googleReviewLink } from "@/lib/links";
+import { trackOutboundClick } from "@/lib/track";
 
 vi.mock("@/lib/track", () => ({
   trackOutboundClick: vi.fn(),
@@ -19,10 +20,15 @@ describe("ReviewCarousel", () => {
     expect(screen.getByText("Toque em Avalie")).toBeInTheDocument();
     expect(screen.queryByText("Abra o Instagram")).not.toBeInTheDocument();
     expect(screen.queryByText("Link da bio")).not.toBeInTheDocument();
+    expect(screen.getByText("Avalie no Google")).toBeInTheDocument();
     expect(
-      screen.getByText("Avalie a Bike Center no Google"),
+      screen.getByText("No site, toque no botão “Avalie no Google”."),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Avalie a Bike Center no Google|Nos avalie no Google/),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Toque no botão")).toBeInTheDocument();
+    expect(screen.getByText("Oficina, peças e acessórios")).toBeInTheDocument();
     expect(screen.getByText("Fartura/SP")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /Avaliar agora no Google/i }),
@@ -89,5 +95,28 @@ describe("ReviewCarousel", () => {
     expect(
       screen.getByText("Conte como foi sua experiência"),
     ).toBeInTheDocument();
+  });
+
+  it("envia link_label próprio “Avaliar agora no Google” no CTA final", () => {
+    vi.mocked(trackOutboundClick).mockClear();
+    render(<ReviewCarousel />);
+    fireEvent.click(
+      screen.getByRole("tab", { name: /Ir para o passo 4: Publique/i }),
+    );
+    expect(googleReviewLink.carouselLabel).toBe("Avaliar agora no Google");
+    const cta = screen.getByRole("link", { name: "Avaliar agora no Google" });
+    expect(cta).toHaveTextContent(googleReviewLink.carouselLabel);
+    fireEvent.click(cta);
+    expect(trackOutboundClick).toHaveBeenCalledTimes(1);
+    expect(trackOutboundClick).toHaveBeenCalledWith(
+      "Avaliar agora no Google",
+      googleReviewLink.href,
+      "review",
+    );
+    expect(trackOutboundClick).not.toHaveBeenCalledWith(
+      "Avalie no Google",
+      expect.anything(),
+      expect.anything(),
+    );
   });
 });

@@ -18,7 +18,7 @@ export function formatBrMobileDisplay(phoneDigits: string): string {
 
 export const store = {
   name: "Bike Center Fartura",
-  tagline: "Motos, bicicletas e acessórios em Fartura/SP",
+  tagline: "Oficina, peças e acessórios",
   footerTagline: "Motos, bicicletas, acessórios, peças e oficina em Fartura/SP",
   trustLine: "Há mais de 30 anos em Fartura",
   city: "Fartura",
@@ -86,6 +86,9 @@ export const mercadoLivreLink = {
 
 export const googleMapsLink = {
   label: "Como chegar — Google Maps",
+  /** Partes do rótulo: a marca fica em `whitespace-nowrap` para não ficar órfã. */
+  action: "Como chegar",
+  brand: "Google Maps",
   href: "https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797",
 } as const;
 
@@ -96,30 +99,29 @@ export const googleMapsPlaceLink = {
 
 /** Avaliações oficiais da ficha no Google Maps (`!9m1!1b1` abre a aba de reviews). */
 export const googleReviewLink = {
-  label: "Nos avalie no Google",
-  prominentLabel: "Avalie a Bike Center no Google",
+  /** Rótulo único: botão da home padrão, mock do passo 1 e legenda do tutorial. */
+  label: "Avalie no Google",
+  /** Rótulo próprio do CTA final do carrossel (texto visível e `link_label` no GTM). */
+  carouselLabel: "Avaliar agora no Google",
   href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y",
 } as const;
 
 export const socialLinks = [
   {
     id: "instagram",
-    label: "Nosso Estoque no Instagram",
-    shortLabel: "Instagram",
+    label: "Estoque no Instagram",
     href: "https://www.instagram.com/bikecenterfartura",
     icon: "instagram" as const,
   },
   {
     id: "tiktok",
-    label: "Acelere com a gente no TikTok",
-    shortLabel: "TikTok",
+    label: "Vídeos no TikTok",
     href: "https://www.tiktok.com/@bikecenterfartura",
     icon: "tiktok" as const,
   },
   {
     id: "facebook",
-    label: "Siga nossa Página",
-    shortLabel: "Facebook",
+    label: "Página no Facebook",
     href: "https://www.facebook.com/profile.php?id=61576748073943",
     icon: "facebook" as const,
   },

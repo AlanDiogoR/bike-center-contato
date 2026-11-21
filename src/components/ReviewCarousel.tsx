@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { SiGooglemaps } from "react-icons/si";
 import { MercadoLivreIcon } from "@/components/BrandSymbols";
-import { googleReviewLink } from "@/lib/links";
+import { googleReviewLink, store } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
 
 const SLIDES = [
@@ -17,7 +17,7 @@ const SLIDES = [
     id: "site",
     step: "1",
     title: "Toque em Avalie",
-    caption: "No site, toque no botão amarelo “Avalie a Bike Center no Google”.",
+    caption: `No site, toque no botão “${googleReviewLink.label}”.`,
   },
   {
     id: "maps",
@@ -92,7 +92,7 @@ function SiteSlide() {
             <span className="text-[8px] font-black text-ink">BC</span>
           </div>
           <p className="mt-1 text-center text-[8px] font-medium text-muted">
-            Motos, bicicletas e acessórios
+            {store.tagline}
           </p>
           <p className="text-center text-[8px] font-semibold text-[#9a3412]">
             Fartura/SP
@@ -102,7 +102,7 @@ function SiteSlide() {
           <div className="relative rounded-xl bg-sun px-2 py-2 text-[10px] font-bold text-ink ring-2 ring-sunset">
             <span className="flex items-center gap-1.5">
               <FaStar className="h-3.5 w-3.5 text-[#9a3412]" aria-hidden />
-              Avalie a Bike Center no Google
+              {googleReviewLink.label}
             </span>
             <StepBadge n="1" />
           </div>
@@ -352,14 +352,14 @@ export function ReviewCarousel() {
               rel="noopener noreferrer"
               onClick={() =>
                 trackOutboundClick(
-                  googleReviewLink.label,
+                  googleReviewLink.carouselLabel,
                   googleReviewLink.href,
                   "review",
                 )
               }
               className="flex h-12 items-center justify-center gap-2 rounded-xl bg-sun px-4 text-base font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              Avaliar agora no Google
+              {googleReviewLink.carouselLabel}
               <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden />
             </a>
           ) : null}

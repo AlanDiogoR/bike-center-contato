@@ -31,7 +31,7 @@ describe("trackOutboundClick", () => {
     const w = window as Window & { dataLayer: Record<string, unknown>[] };
 
     trackOutboundClick(
-      "Avalie a Bike Center no Google",
+      "Avalie no Google",
       "https://www.google.com/maps",
       "review",
     );
