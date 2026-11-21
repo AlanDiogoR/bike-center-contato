@@ -29,6 +29,14 @@ import { PIX_BUTTON_LABEL } from "@/lib/pix";
 import { trackOutboundClick } from "@/lib/track";
 import { ReviewCarousel } from "@/components/ReviewCarousel";
 
+// Comparação literal inline: o DefinePlugin troca a env no build e o webpack descarta o
+// require() do ramo morto. Com a flag desligada, nem o VipSlot nem o next/dynamic entram no bundle.
+const VipEntry: React.ComponentType | null =
+  process.env.NEXT_PUBLIC_VIP_ENABLED === "true" &&
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    ? require("@/components/VipSlot").default
+    : null;
+
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
@@ -220,6 +228,8 @@ export function LinksSection() {
           </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
+
+        {VipEntry ? <VipEntry /> : null}
 
         <a
           href={mercadoLivreLink.href}

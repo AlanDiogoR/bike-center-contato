@@ -35,10 +35,23 @@ Copie `.env.example` para `.env.local` e ajuste:
 | `NEXT_PUBLIC_HIGHLIGHT_HREF` | URL do slot de oferta (obrigatório junto com o label para exibir) |
 | `NEXT_PUBLIC_GTM_ID` | Google Tag Manager (opcional) |
 | `NEXT_PUBLIC_FB_PIXEL_ID` | Meta Pixel (opcional) |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase para a lista VIP |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave pública (`anon`) do Supabase — **nunca** use `service_role` no client |
+| `VIP_ENABLED` | Flag do formulário VIP (padrão **desligada**; só liga com `"true"` e exige novo deploy) |
+| `TURNSTILE_SITE_KEY` | Site key pública do Cloudflare Turnstile (repassada ao client no build apenas se `VIP_ENABLED=true`) |
+| `TURNSTILE_SECRET` | Secret key do Cloudflare Turnstile (somente servidor, na função `/api/vip`) |
+| `SUPABASE_URL` | URL do projeto Supabase (somente servidor, na função `/api/vip`) |
+| `SUPABASE_ANON_KEY` | Chave `anon` do Supabase (somente servidor, na função `/api/vip` — **nunca** `service_role`) |
+| `VIP_RATE_SALT` | Salt para hash SHA-256 do IP no rate limit da função `/api/vip` (somente servidor) |
+| `VIP_ALLOWED_HOSTS` | Lista opcional separada por vírgula de hostnames exatos permitidos no `Origin` e no `siteverify` do Turnstile (quando definida, substitui o padrão `contatobikecenter.netlify.app` + hosts de `URL` e `DEPLOY_PRIME_URL`). No domínio próprio, o DevOps configura o domínio aqui |
 
 No Netlify: **Site settings → Environment variables**.
+
+## Formulário VIP
+
+O bloco de captação **Quero ofertas VIP no WhatsApp** fica logo abaixo do botão **Avalie no Google** na home padrão (`data-placa="hide"`, não aparece em `?utm_source=placa`) e carrega o formulário sob demanda apenas no clique (`next/dynamic` com `ssr: false`), injetando o script do Cloudflare Turnstile somente no primeiro foco ou visibilidade do formulário.
+
+- **Flag padrão desligada (`VIP_ENABLED`)**: por padrão a flag vem desligada. Ela só ativa com o valor exato `VIP_ENABLED=true` (e `TURNSTILE_SITE_KEY` preenchida). Com a flag desligada, nada do bloco VIP entra no HTML da home e a função `/api/vip` responde `503` imediatamente sem ler o corpo.
+- **Ligar ou desligar exige redeploy**: como `next.config.mjs` injeta `NEXT_PUBLIC_VIP_ENABLED` e `NEXT_PUBLIC_TURNSTILE_SITE_KEY` em tempo de build para eliminar o código morto quando desligado, alterar `VIP_ENABLED` ou `TURNSTILE_SITE_KEY` exige um **novo deploy** no Netlify.
+- **Variáveis de ambiente (Alan / DevOps)**: as chaves reais do Cloudflare Turnstile (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET`), as variáveis do Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) e o salt do rate limit (`VIP_RATE_SALT`) ficam com o **Alan / DevOps** e são configuradas apenas nas variáveis de ambiente do Netlify (o client não fala diretamente com o Supabase).
 
 ## Banco VIP (Supabase)
 
@@ -54,12 +67,17 @@ A estrutura do banco para captação de leads VIP com consentimento LGPD fica ve
 
 ### Variáveis no Netlify
 
-As variáveis abaixo ficam a cargo do **DevOps** no momento de aplicar em produção (**Site settings → Environment variables** — nada deve ser configurado no Netlify antes disso):
+As variáveis abaixo ficam a cargo do **Alan / DevOps** no momento de aplicar em produção (**Site settings → Environment variables** — nada deve ser configurado no Netlify antes disso):
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `VIP_ENABLED` (`true` para ativar; exige redeploy)
+- `TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `VIP_RATE_SALT`
+- `VIP_ALLOWED_HOSTS` (opcional; no domínio próprio, o DevOps põe o domínio aqui. A secret de **teste** da Cloudflare devolve `hostname: "example.com"`, então um teste manual com chaves de teste num preview exige incluir `example.com` **temporariamente** em `VIP_ALLOWED_HOSTS` — **nunca** em produção)
 
-> **Segurança:** somente a chave pública `anon` pode ir para o client (`NEXT_PUBLIC_*`). **Nunca** adicione a `service_role` key no client ou em variáveis públicas do Netlify.
+> **Segurança:** o client não conversa diretamente com o Supabase; a chamada à RPC `public.vip_lead_signup` ocorre exclusivamente no servidor via Netlify Function `/api/vip`. Somente a `TURNSTILE_SITE_KEY` (pública) vai para o bundle do client quando `VIP_ENABLED=true`. **Nunca** exponha `TURNSTILE_SECRET`, `SUPABASE_ANON_KEY`, `VIP_RATE_SALT` ou a `service_role` key no client.
 
 ### Validação e aplicação da migration
 
