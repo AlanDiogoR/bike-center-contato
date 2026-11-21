@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import {
   FaClock,
@@ -27,9 +28,15 @@ import {
 } from "@/lib/links";
 import { PIX_BUTTON_LABEL } from "@/lib/pix";
 import { trackOutboundClick } from "@/lib/track";
-import { VIP_ON } from "@/lib/vip";
 import { ReviewCarousel } from "@/components/ReviewCarousel";
-import { VipEntry } from "@/components/VipEntry";
+
+// Comparação literal inline: o DefinePlugin troca a env no build e o webpack (ConstPlugin)
+// descarta o import() do ramo morto, então com a flag desligada nada do VIP entra no bundle.
+const VipEntry =
+  process.env.NEXT_PUBLIC_VIP_ENABLED === "true" &&
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    ? dynamic(() => import("@/components/VipEntry"), { ssr: true })
+    : null;
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -223,7 +230,7 @@ export function LinksSection() {
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
 
-        {VIP_ON ? <VipEntry /> : null}
+        {VipEntry ? <VipEntry /> : null}
 
         <a
           href={mercadoLivreLink.href}
