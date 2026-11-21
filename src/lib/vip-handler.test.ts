@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { CONSENT_TEXT_VERSION } from "./vip";
+import { CONSENT_TEXT_VERSION, TURNSTILE_ACTION } from "./vip";
 import {
+  DEFAULT_VIP_ALLOWED_HOST,
   TURNSTILE_SITEVERIFY_URL,
+  getAllowedHosts,
   handleVip,
   type VipRateStore,
 } from "./vip-handler";
@@ -59,6 +61,7 @@ function makePostRequest(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
       "x-nf-client-connection-ip": "203.0.113.42",
       ...headers,
     },
@@ -68,9 +71,19 @@ function makePostRequest(
 
 function createMockFetch(options?: {
   turnstileSuccess?: boolean;
+  turnstileHostname?: string | null;
+  turnstileAction?: string | null;
   supabaseStatus?: number;
 }) {
   const turnstileSuccess = options?.turnstileSuccess ?? true;
+  const turnstileHostname =
+    options?.turnstileHostname === undefined
+      ? DEFAULT_VIP_ALLOWED_HOST
+      : options.turnstileHostname;
+  const turnstileAction =
+    options?.turnstileAction === undefined
+      ? TURNSTILE_ACTION
+      : options.turnstileAction;
   const supabaseStatus = options?.supabaseStatus ?? 204;
 
   return vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -83,6 +96,8 @@ function createMockFetch(options?: {
       return new Response(
         JSON.stringify({
           success: pass,
+          ...(turnstileHostname !== null ? { hostname: turnstileHostname } : {}),
+          ...(turnstileAction !== null ? { action: turnstileAction } : {}),
           "error-codes": pass ? [] : ["invalid-input-response"],
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
@@ -151,7 +166,10 @@ describe("handleVip (/api/vip)", () => {
 
     const textReq = new Request("https://contatobikecenter.netlify.app/api/vip", {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "text/plain",
+        Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
+      },
       body: "plain",
     });
     const res400Type = await handleVip(textReq, {
@@ -172,6 +190,186 @@ describe("handleVip (/api/vip)", () => {
     });
     expect(res400Size.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("Origin: rejeita requisição sem Origin, com Origin de outro site ou http:// com 403 { ok:false, error:'origem' } sem ler corpo nem chamar fetch/rateStore, e aceita Origin https://<host> permitido", async () => {
+    const fetchMock = createMockFetch();
+    const rateStore = createMemoryRateStore();
+    const env = createBaseEnv();
+
+    // 1. Sem Origin -> 403 sem ler o corpo
+    let bodyRead = false;
+    const reqNoOrigin = {
+      method: "POST",
+      headers: new Headers({
+        "Content-Type": "application/json",
+        "x-nf-client-connection-ip": "203.0.113.42",
+      }),
+      text: async () => {
+        bodyRead = true;
+        return JSON.stringify(createValidPayload());
+      },
+    } as unknown as Request;
+    const resNoOrigin = await handleVip(reqNoOrigin, {
+      env,
+      fetch: fetchMock,
+      rateStore,
+    });
+    expect(resNoOrigin.status).toBe(403);
+    expect(await resNoOrigin.json()).toEqual({ ok: false, error: "origem" });
+    expect(bodyRead).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+
+    // 2. Origin de outro site -> 403
+    const resOtherOrigin = await handleVip(
+      makePostRequest(createValidPayload(), {
+        Origin: "https://evil.example.org",
+      }),
+      { env, fetch: fetchMock, rateStore },
+    );
+    expect(resOtherOrigin.status).toBe(403);
+    expect(await resOtherOrigin.json()).toEqual({ ok: false, error: "origem" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+
+    // 3. http:// do host permitido -> 403
+    const resHttpOrigin = await handleVip(
+      makePostRequest(createValidPayload(), {
+        Origin: `http://${DEFAULT_VIP_ALLOWED_HOST}`,
+      }),
+      { env, fetch: fetchMock, rateStore },
+    );
+    expect(resHttpOrigin.status).toBe(403);
+    expect(await resHttpOrigin.json()).toEqual({ ok: false, error: "origem" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+
+    // 4. Origin permitido -> 200
+    const resAllowed = await handleVip(
+      makePostRequest(createValidPayload(), {
+        Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
+      }),
+      { env, fetch: fetchMock, rateStore },
+    );
+    expect(resAllowed.status).toBe(200);
+  });
+
+  it("getAllowedHosts e validação de hostname/action no siteverify", async () => {
+    // Padrão: contatobikecenter.netlify.app + hosts de URL e DEPLOY_PRIME_URL
+    expect(getAllowedHosts(createBaseEnv())).toEqual([
+      "contatobikecenter.netlify.app",
+    ]);
+    expect(
+      getAllowedHosts(
+        createBaseEnv({
+          URL: "https://bikecenterfartura.com.br",
+          DEPLOY_PRIME_URL:
+            "https://deploy-preview-15--contatobikecenter.netlify.app/alguma-rota",
+        }),
+      ),
+    ).toEqual([
+      "contatobikecenter.netlify.app",
+      "bikecenterfartura.com.br",
+      "deploy-preview-15--contatobikecenter.netlify.app",
+    ]);
+
+    // VIP_ALLOWED_HOSTS substitui o padrão integralmente (trim, minúsculas, sem esquema/porta)
+    expect(
+      getAllowedHosts(
+        createBaseEnv({
+          VIP_ALLOWED_HOSTS:
+            "  BikeCenterFartura.com.br , preview.bikecenter.com.br ",
+          URL: "https://ignored-when-override.netlify.app",
+        }),
+      ),
+    ).toEqual(["bikecenterfartura.com.br", "preview.bikecenter.com.br"]);
+
+    const rateStore = createMemoryRateStore();
+
+    // Hostname fora da allowlist no siteverify -> 403 captcha e não chama Supabase
+    const fetchWrongHost = createMockFetch({
+      turnstileSuccess: true,
+      turnstileHostname: "outro-dominio.com",
+      turnstileAction: TURNSTILE_ACTION,
+    });
+    const resWrongHost = await handleVip(makePostRequest(createValidPayload()), {
+      env: createBaseEnv(),
+      fetch: fetchWrongHost,
+      rateStore,
+    });
+    expect(resWrongHost.status).toBe(403);
+    expect(await resWrongHost.json()).toEqual({ ok: false, error: "captcha" });
+    expect(fetchWrongHost).toHaveBeenCalledTimes(1);
+
+    // Action errada no siteverify -> 403 captcha
+    const fetchWrongAction = createMockFetch({
+      turnstileSuccess: true,
+      turnstileHostname: DEFAULT_VIP_ALLOWED_HOST,
+      turnstileAction: "login",
+    });
+    const resWrongAction = await handleVip(
+      makePostRequest(createValidPayload()),
+      {
+        env: createBaseEnv(),
+        fetch: fetchWrongAction,
+        rateStore,
+      },
+    );
+    expect(resWrongAction.status).toBe(403);
+    expect(await resWrongAction.json()).toEqual({ ok: false, error: "captcha" });
+    expect(fetchWrongAction).toHaveBeenCalledTimes(1);
+
+    // Action ausente no siteverify -> 403 captcha
+    const fetchMissingAction = createMockFetch({
+      turnstileSuccess: true,
+      turnstileHostname: DEFAULT_VIP_ALLOWED_HOST,
+      turnstileAction: null,
+    });
+    const resMissingAction = await handleVip(
+      makePostRequest(createValidPayload()),
+      {
+        env: createBaseEnv(),
+        fetch: fetchMissingAction,
+        rateStore,
+      },
+    );
+    expect(resMissingAction.status).toBe(403);
+    expect(await resMissingAction.json()).toEqual({
+      ok: false,
+      error: "captcha",
+    });
+    expect(fetchMissingAction).toHaveBeenCalledTimes(1);
+
+    // VIP_ALLOWED_HOSTS substitui o padrão: contatobikecenter.netlify.app deixa de ser aceito e o custom passa
+    const customEnv = createBaseEnv({
+      VIP_ALLOWED_HOSTS: "vip.bikecenter.com.br",
+    });
+    const fetchCustom = createMockFetch({
+      turnstileSuccess: true,
+      turnstileHostname: "VIP.BIKECENTER.COM.BR",
+      turnstileAction: TURNSTILE_ACTION,
+    });
+    const resDefaultRejected = await handleVip(
+      makePostRequest(createValidPayload(), {
+        Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
+      }),
+      { env: customEnv, fetch: fetchCustom, rateStore },
+    );
+    expect(resDefaultRejected.status).toBe(403);
+    expect(await resDefaultRejected.json()).toEqual({
+      ok: false,
+      error: "origem",
+    });
+
+    const resCustomOk = await handleVip(
+      makePostRequest(createValidPayload(), {
+        Origin: "https://vip.bikecenter.com.br",
+      }),
+      { env: customEnv, fetch: fetchCustom, rateStore },
+    );
+    expect(resCustomOk.status).toBe(200);
+    expect(await resCustomOk.json()).toEqual({ ok: true });
   });
 
   it("2. Honeypot: empresa preenchido devolve 200 { ok: true } e zero chamadas a fetch e rateStore", async () => {
@@ -205,7 +403,10 @@ describe("handleVip (/api/vip)", () => {
       "https://contatobikecenter.netlify.app/api/vip",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
+        },
         body: JSON.stringify(createValidPayload()),
       },
     );
@@ -227,6 +428,7 @@ describe("handleVip (/api/vip)", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Origin: `https://${DEFAULT_VIP_ALLOWED_HOST}`,
           "X-Forwarded-For": "198.51.100.10",
         },
         body: JSON.stringify(createValidPayload()),

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   CONSENT_TEXT,
   CONSENT_TEXT_VERSION,
+  TURNSTILE_ACTION,
   VIP_OPT_OUT_HREF,
   VIP_STORAGE_KEY,
   downloadVcard,
@@ -18,6 +19,7 @@ export const TURNSTILE_SCRIPT_SRC =
 
 interface TurnstileRenderOptions {
   sitekey: string;
+  action?: string;
   size?: "flexible" | "normal" | "compact";
   language?: string;
   callback?: (token: string) => void;
@@ -90,6 +92,7 @@ export function VipForm() {
     widgetRenderedRef.current = true;
     widgetIdRef.current = window.turnstile.render(container, {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
+      action: TURNSTILE_ACTION,
       size: chosenSize,
       language: "pt-br",
       callback: (token: string) => {

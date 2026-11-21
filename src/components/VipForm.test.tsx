@@ -10,6 +10,7 @@ import { PHONE_CLARO } from "@/lib/links";
 import {
   CONSENT_TEXT,
   CONSENT_TEXT_VERSION,
+  TURNSTILE_ACTION,
   VIP_STORAGE_KEY,
 } from "@/lib/vip";
 import { LinksSection } from "./LinksSection";
@@ -136,6 +137,7 @@ describe("VipForm e VipEntry", () => {
       container,
       expect.objectContaining({
         sitekey: CF_TEST_SITE_KEY,
+        action: TURNSTILE_ACTION,
         size: "flexible",
         language: "pt-br",
       }),

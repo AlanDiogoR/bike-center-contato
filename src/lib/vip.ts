@@ -18,6 +18,8 @@ export const VIP_OPT_OUT_HREF = `https://wa.me/${PHONE_CLARO}?text=SAIR`;
 
 export const VIP_STORAGE_KEY = "vip_cadastrado";
 
+export const TURNSTILE_ACTION = "vip_signup";
+
 export const VCARD_FILENAME = "bike-center-fartura.vcf";
 export const VCARD_MIME = "text/vcard;charset=utf-8";
 

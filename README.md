@@ -41,6 +41,7 @@ Copie `.env.example` para `.env.local` e ajuste:
 | `SUPABASE_URL` | URL do projeto Supabase (somente servidor, na função `/api/vip`) |
 | `SUPABASE_ANON_KEY` | Chave `anon` do Supabase (somente servidor, na função `/api/vip` — **nunca** `service_role`) |
 | `VIP_RATE_SALT` | Salt para hash SHA-256 do IP no rate limit da função `/api/vip` (somente servidor) |
+| `VIP_ALLOWED_HOSTS` | Lista opcional separada por vírgula de hostnames exatos permitidos no `Origin` e no `siteverify` do Turnstile (quando definida, substitui o padrão `contatobikecenter.netlify.app` + hosts de `URL` e `DEPLOY_PRIME_URL`). No domínio próprio, o DevOps configura o domínio aqui |
 
 No Netlify: **Site settings → Environment variables**.
 
@@ -74,6 +75,7 @@ As variáveis abaixo ficam a cargo do **Alan / DevOps** no momento de aplicar em
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 - `VIP_RATE_SALT`
+- `VIP_ALLOWED_HOSTS` (opcional; no domínio próprio, o DevOps põe o domínio aqui. A secret de **teste** da Cloudflare devolve `hostname: "example.com"`, então um teste manual com chaves de teste num preview exige incluir `example.com` **temporariamente** em `VIP_ALLOWED_HOSTS` — **nunca** em produção)
 
 > **Segurança:** o client não conversa diretamente com o Supabase; a chamada à RPC `public.vip_lead_signup` ocorre exclusivamente no servidor via Netlify Function `/api/vip`. Somente a `TURNSTILE_SITE_KEY` (pública) vai para o bundle do client quando `VIP_ENABLED=true`. **Nunca** exponha `TURNSTILE_SECRET`, `SUPABASE_ANON_KEY`, `VIP_RATE_SALT` ou a `service_role` key no client.
 

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   CONSENT_TEXT_VERSION,
+  TURNSTILE_ACTION,
   WHATSAPP_E164_RE,
   isValidVipInteresse,
   normalizeBrWhatsapp,
@@ -8,6 +9,8 @@ import {
 
 export const TURNSTILE_SITEVERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+
+export const DEFAULT_VIP_ALLOWED_HOST = "contatobikecenter.netlify.app";
 
 export const VIP_MAX_BODY_BYTES = 4096;
 export const VIP_RATE_LIMIT_MAX = 5;
@@ -37,6 +40,52 @@ function readEnv(env: VipEnvSource | undefined, key: string): string {
     return ((env as { get(k: string): string | undefined }).get(key) ?? "").trim();
   }
   return ((env as Record<string, string | undefined>)[key] ?? "").trim();
+}
+
+function extractHostname(value: string): string | null {
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+  try {
+    return new URL(trimmed).hostname.toLowerCase() || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getAllowedHosts(env: VipEnvSource | undefined): string[] {
+  const custom = readEnv(env, "VIP_ALLOWED_HOSTS");
+  if (custom) {
+    const hosts = custom
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter((item) => item.length > 0 && !item.includes("://") && !item.includes(":") && !item.includes("/"));
+    return Array.from(new Set(hosts));
+  }
+
+  const hosts = new Set<string>([DEFAULT_VIP_ALLOWED_HOST]);
+  for (const key of ["URL", "DEPLOY_PRIME_URL"] as const) {
+    const raw = readEnv(env, key);
+    if (raw) {
+      const host = extractHostname(raw);
+      if (host) hosts.add(host);
+    }
+  }
+  return Array.from(hosts);
+}
+
+function isAllowedOrigin(
+  originHeader: string | null,
+  allowedHosts: readonly string[],
+): boolean {
+  if (!originHeader) return false;
+  const normalized = originHeader.trim().toLowerCase();
+  if (!normalized) return false;
+  for (const host of allowedHosts) {
+    if (normalized === `https://${host}`) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function resolveNow(now: VipHandlerDeps["now"]): number {
@@ -125,13 +174,18 @@ export async function handleVip(
     return jsonResponse(503, { ok: false, error: "indisponivel" });
   }
 
-  // 2. Método != POST -> 405; Content-Type != JSON ou corpo > 4 KB -> 400
+  // 2. Método != POST -> 405; Origin fora da allowlist -> 403; Content-Type != JSON ou corpo > 4 KB -> 400
   if (req.method.toUpperCase() !== "POST") {
     return jsonResponse(
       405,
       { ok: false, error: "metodo_nao_permitido" },
       { Allow: "POST" },
     );
+  }
+
+  const allowedHosts = getAllowedHosts(deps.env);
+  if (!isAllowedOrigin(req.headers.get("origin"), allowedHosts)) {
+    return jsonResponse(403, { ok: false, error: "origem" });
   }
 
   const contentType = req.headers.get("content-type") ?? "";
@@ -246,8 +300,22 @@ export async function handleVip(
     if (!verifyRes.ok) {
       return jsonResponse(403, { ok: false, error: "captcha" });
     }
-    const verifyJson = (await verifyRes.json()) as { success?: unknown };
-    if (!verifyJson || verifyJson.success !== true) {
+    const verifyJson = (await verifyRes.json()) as {
+      success?: unknown;
+      action?: unknown;
+      hostname?: unknown;
+    };
+    const verifiedHostname =
+      typeof verifyJson?.hostname === "string"
+        ? verifyJson.hostname.trim().toLowerCase()
+        : "";
+    if (
+      !verifyJson ||
+      verifyJson.success !== true ||
+      verifyJson.action !== TURNSTILE_ACTION ||
+      !verifiedHostname ||
+      !allowedHosts.includes(verifiedHostname)
+    ) {
       return jsonResponse(403, { ok: false, error: "captcha" });
     }
   } catch {
