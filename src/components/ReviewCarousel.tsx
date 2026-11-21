@@ -352,14 +352,14 @@ export function ReviewCarousel() {
               rel="noopener noreferrer"
               onClick={() =>
                 trackOutboundClick(
-                  googleReviewLink.label,
+                  googleReviewLink.carouselLabel,
                   googleReviewLink.href,
                   "review",
                 )
               }
               className="flex h-12 items-center justify-center gap-2 rounded-xl bg-sun px-4 text-base font-bold text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
             >
-              Avaliar agora no Google
+              {googleReviewLink.carouselLabel}
               <FaExternalLinkAlt className="h-3.5 w-3.5" aria-hidden />
             </a>
           ) : null}

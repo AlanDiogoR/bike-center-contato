@@ -101,6 +101,8 @@ export const googleMapsPlaceLink = {
 export const googleReviewLink = {
   /** Rótulo único: botão da home padrão, mock do passo 1 e legenda do tutorial. */
   label: "Avalie no Google",
+  /** Rótulo próprio do CTA final do carrossel (texto visível e `link_label` no GTM). */
+  carouselLabel: "Avaliar agora no Google",
   href: "https://www.google.com/maps/place/Bike+Center+Fartura/@-23.3883268,-49.5062797,17z/data=!4m8!3m7!1s0x94c1a51538905ff9:0x7771bcda03c58d75!8m2!3d-23.3883268!4d-49.5062797!9m1!1b1!16s%2Fg%2F11c5bhrp_y",
 } as const;
 

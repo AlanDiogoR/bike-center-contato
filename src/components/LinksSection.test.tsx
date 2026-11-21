@@ -207,6 +207,14 @@ describe("LinksSection", () => {
       googleReviewLink.href,
       "review",
     );
+    // link_label do botão da home (GTM) é distinto do CTA final do carrossel.
+    expect(trackOutboundClick).toHaveBeenLastCalledWith(
+      "Avalie no Google",
+      googleReviewLink.href,
+      "review",
+    );
+    expect(googleReviewLink.carouselLabel).toBe("Avaliar agora no Google");
+    expect(googleReviewLink.carouselLabel).not.toBe(googleReviewLink.label);
     const tutorial = screen.getByRole("region", {
       name: "Passo a passo para avaliar no Google",
     });
