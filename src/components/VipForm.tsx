@@ -319,7 +319,7 @@ export function VipForm() {
           required
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink outline-none focus:border-sunset"
+          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         />
       </div>
 
@@ -340,7 +340,7 @@ export function VipForm() {
           placeholder="(14) 99999-9999"
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
-          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink outline-none focus:border-sunset"
+          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         />
       </div>
 
@@ -356,7 +356,7 @@ export function VipForm() {
           name="interesse"
           value={interesse}
           onChange={(e) => setInteresse(e.target.value as VipInteresse)}
-          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink outline-none focus:border-sunset"
+          className="mt-1.5 h-12 w-full rounded-xl border border-[#ead7b8] bg-paper px-3 text-base text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           <option value="moto">Moto</option>
           <option value="bike">Bike</option>
@@ -395,7 +395,7 @@ export function VipForm() {
               setConsent(e.target.checked);
               if (e.target.checked) setErrorMsg("");
             }}
-            className="mt-1 h-4 w-4 shrink-0 rounded border-[#ead7b8] text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            className="mt-0.5 h-5 w-5 shrink-0 rounded border-[#ead7b8] text-pine focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           />
           <label htmlFor={consentId} className="text-xs leading-snug text-ink">
             {CONSENT_TEXT}

@@ -231,6 +231,25 @@ describe("VipForm e VipEntry", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("campos do form têm foco visível (outline) e checkbox com alvo maior", () => {
+    render(<VipForm />);
+    const fields = [
+      screen.getByLabelText("Nome"),
+      screen.getByLabelText("WhatsApp"),
+      screen.getByLabelText("Interesse"),
+    ];
+    for (const field of fields) {
+      expect(field).not.toHaveClass("outline-none");
+      expect(field).toHaveClass(
+        "focus-visible:outline",
+        "focus-visible:outline-2",
+        "focus-visible:outline-offset-2",
+        "focus-visible:outline-ink",
+      );
+    }
+    expect(screen.getByLabelText(CONSENT_TEXT)).toHaveClass("h-5", "w-5");
+  });
+
   it("2. Honeypot no componente: campo empresa preenchido não chama /api/vip", () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
