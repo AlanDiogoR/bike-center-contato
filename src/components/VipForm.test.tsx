@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PHONE_CLARO } from "@/lib/links";
 import {
@@ -27,7 +33,51 @@ describe("VipForm e VipEntry", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
+
+  const turnstileScripts = () =>
+    document.querySelectorAll(`script[src="${TURNSTILE_SCRIPT_SRC}"]`);
+
+  /** rAF síncrono e IntersectionObserver controlável (não dispara sozinho). */
+  function stubVisibilityApis({ withObserver = true } = {}) {
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    });
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    const observers: { cb: IntersectionObserverCallback; observe: ReturnType<typeof vi.fn> }[] = [];
+    if (withObserver) {
+      class MockIO {
+        observe = vi.fn();
+        disconnect = vi.fn();
+        unobserve = vi.fn();
+        takeRecords = () => [];
+        constructor(cb: IntersectionObserverCallback) {
+          observers.push({ cb, observe: this.observe });
+        }
+      }
+      vi.stubGlobal("IntersectionObserver", MockIO);
+    } else {
+      vi.stubGlobal("IntersectionObserver", undefined);
+    }
+    return observers;
+  }
+
+  function mockFormRect(rect: Partial<DOMRect>) {
+    vi.spyOn(HTMLFormElement.prototype, "getBoundingClientRect").mockReturnValue({
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+      ...rect,
+    } as DOMRect);
+  }
 
   it("1. Flag off: LinksSection não renderiza o botão VIP quando a flag está desligada", () => {
     render(<LinksSection />);
@@ -53,30 +103,24 @@ describe("VipForm e VipEntry", () => {
     expect(await screen.findByLabelText("Nome")).toBeInTheDocument();
   });
 
-  it("Turnstile lazy: não injeta o script antes de foco ou visibilidade e injeta apenas uma vez ao focar", () => {
+  it("Turnstile lazy: fora do viewport não injeta o script até foco ou interseção, e injeta apenas uma vez", () => {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = CF_TEST_SITE_KEY;
+    const observers = stubVisibilityApis();
+    mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 360 });
     const renderMock = vi.fn(() => "widget-test-1");
-    const resetMock = vi.fn();
-    window.turnstile = {
-      render: renderMock,
-      reset: resetMock,
-    };
+    window.turnstile = { render: renderMock, reset: vi.fn() };
 
     render(<VipForm />);
 
-    // Antes de focusin ou IntersectionObserver: script NÃO existe no DOM
-    expect(
-      document.querySelector(`script[src="${TURNSTILE_SCRIPT_SRC}"]`),
-    ).toBeNull();
+    // Form montado fora do viewport: observa, mas NÃO carrega o script
+    expect(observers).toHaveLength(1);
+    expect(observers[0].observe).toHaveBeenCalledTimes(1);
+    expect(turnstileScripts()).toHaveLength(0);
     expect(renderMock).not.toHaveBeenCalled();
 
-    const nomeInput = screen.getByLabelText("Nome");
-    fireEvent.focusIn(nomeInput);
+    fireEvent.focusIn(screen.getByLabelText("Nome"));
 
-    const scripts = document.querySelectorAll(
-      `script[src="${TURNSTILE_SCRIPT_SRC}"]`,
-    );
-    expect(scripts).toHaveLength(1);
+    expect(turnstileScripts()).toHaveLength(1);
     expect(renderMock).toHaveBeenCalledTimes(1);
     expect(renderMock).toHaveBeenCalledWith(
       screen.getByTestId("turnstile-container"),
@@ -87,12 +131,104 @@ describe("VipForm e VipEntry", () => {
       }),
     );
 
-    // Segundo focusin não duplica script nem re-renderiza o widget
+    // Novo foco ou interseção posterior não duplicam script nem widget
     fireEvent.focusIn(screen.getByLabelText("WhatsApp"));
-    expect(
-      document.querySelectorAll(`script[src="${TURNSTILE_SCRIPT_SRC}"]`),
-    ).toHaveLength(1);
+    act(() => {
+      observers[0].cb(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(turnstileScripts()).toHaveLength(1);
     expect(renderMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Turnstile: carrega quando o form fora do viewport passa a intersectar", () => {
+    const observers = stubVisibilityApis();
+    mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 360 });
+    const renderMock = vi.fn(() => "w-io");
+    window.turnstile = { render: renderMock, reset: vi.fn() };
+
+    render(<VipForm />);
+    expect(turnstileScripts()).toHaveLength(0);
+
+    act(() => {
+      observers[0].cb(
+        [{ isIntersecting: true } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+    expect(turnstileScripts()).toHaveLength(1);
+    expect(renderMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Turnstile: carrega após o primeiro paint quando o form já monta visível no viewport", () => {
+    const observers = stubVisibilityApis();
+    mockFormRect({ top: 120, bottom: 560, left: 0, right: 360 });
+    const renderMock = vi.fn(() => "w-visible");
+    window.turnstile = { render: renderMock, reset: vi.fn() };
+
+    render(<VipForm />);
+
+    expect(turnstileScripts()).toHaveLength(1);
+    expect(renderMock).toHaveBeenCalledTimes(1);
+    // Já visível: nem precisa do IntersectionObserver
+    expect(observers).toHaveLength(0);
+  });
+
+  it("Turnstile: carrega ao montar quando IntersectionObserver não existe", () => {
+    stubVisibilityApis({ withObserver: false });
+    const renderMock = vi.fn(() => "w-no-io");
+    window.turnstile = { render: renderMock, reset: vi.fn() };
+
+    render(<VipForm />);
+
+    expect(turnstileScripts()).toHaveLength(1);
+    expect(renderMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("botão de envio fica desabilitado com aviso até chegar o token do Turnstile", () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+    stubVisibilityApis();
+    mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 360 });
+    let issueToken: ((token: string) => void) | undefined;
+    window.turnstile = {
+      render: vi.fn((_el, opts) => {
+        issueToken = opts.callback;
+        return "w-token";
+      }),
+      reset: vi.fn(),
+    };
+
+    render(<VipForm />);
+    const submitBtn = screen.getByRole("button", {
+      name: /Entrar na lista VIP/i,
+    });
+    const hint = screen.getByText("Verificando que você não é um robô…");
+    expect(submitBtn).toHaveAttribute("aria-describedby", hint.id);
+
+    fireEvent.change(screen.getByLabelText("Nome"), {
+      target: { value: "Ana" },
+    });
+    fireEvent.change(screen.getByLabelText("WhatsApp"), {
+      target: { value: "(14) 99166-7793" },
+    });
+    fireEvent.click(screen.getByLabelText(CONSENT_TEXT));
+
+    // Consentimento marcado, mas sem token: segue desabilitado e não envia
+    expect(submitBtn).toBeDisabled();
+    fireEvent.submit(submitBtn.closest("form")!);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    act(() => {
+      issueToken?.("tok-ok");
+    });
+    expect(submitBtn).not.toBeDisabled();
+    expect(submitBtn).not.toHaveAttribute("aria-describedby");
+    expect(
+      screen.queryByText("Verificando que você não é um robô…"),
+    ).not.toBeInTheDocument();
   });
 
   it("2. Honeypot no componente: campo empresa preenchido não chama /api/vip", () => {
@@ -118,9 +254,7 @@ describe("VipForm e VipEntry", () => {
     expect(honeypot).toHaveAttribute("aria-hidden", "true");
 
     fireEvent.change(honeypot, { target: { value: "Empresa Spam" } });
-    fireEvent.click(
-      screen.getByRole("button", { name: /Entrar na lista VIP/i }),
-    );
+    fireEvent.submit(honeypot.closest("form")!);
 
     expect(fetchMock).not.toHaveBeenCalled();
   });

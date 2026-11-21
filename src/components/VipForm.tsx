@@ -55,6 +55,7 @@ export function VipForm() {
   const consentId = useId();
   const empresaId = useId();
   const errorId = useId();
+  const robotHintId = useId();
 
   const [alreadyRegistered] = useState<boolean>(() => checkLocalVipFlag());
   const [submitted, setSubmitted] = useState(false);
@@ -124,8 +125,24 @@ export function VipForm() {
     };
     formEl.addEventListener("focusin", handleFocusIn);
 
+    // O form só monta depois do clique no botão VIP. Após o primeiro paint,
+    // carrega o Turnstile se o form já estiver no viewport (ou se não houver
+    // IntersectionObserver); caso contrário, observa até ficar visível.
     let observer: IntersectionObserver | null = null;
-    if (typeof IntersectionObserver !== "undefined") {
+    const isInViewport = () => {
+      const rect = formEl.getBoundingClientRect();
+      const vh =
+        window.innerHeight || document.documentElement.clientHeight || 0;
+      const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+      return (
+        rect.bottom > 0 && rect.right > 0 && rect.top < vh && rect.left < vw
+      );
+    };
+    const checkVisibility = () => {
+      if (typeof IntersectionObserver === "undefined" || isInViewport()) {
+        activateTurnstile();
+        return;
+      }
       observer = new IntersectionObserver((entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
           activateTurnstile();
@@ -133,10 +150,17 @@ export function VipForm() {
         }
       });
       observer.observe(formEl);
-    }
+    };
+    const rafId =
+      typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame(checkVisibility)
+        : null;
+    const timeoutId = rafId === null ? window.setTimeout(checkVisibility, 0) : null;
 
     return () => {
       formEl.removeEventListener("focusin", handleFocusIn);
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
       observer?.disconnect();
     };
   }, [alreadyRegistered, submitted, activateTurnstile]);
@@ -168,6 +192,11 @@ export function VipForm() {
 
     if (!consent) {
       setErrorMsg("Marque o consentimento LGPD para entrar na lista VIP.");
+      return;
+    }
+
+    if (!turnstileToken) {
+      activateTurnstile();
       return;
     }
 
@@ -395,9 +424,20 @@ export function VipForm() {
         </p>
       ) : null}
 
+      {!turnstileToken ? (
+        <p
+          id={robotHintId}
+          aria-live="polite"
+          className="text-xs font-medium text-muted"
+        >
+          Verificando que você não é um robô…
+        </p>
+      ) : null}
+
       <button
         type="submit"
-        disabled={!consent || submitting}
+        disabled={!consent || submitting || !turnstileToken}
+        aria-describedby={!turnstileToken ? robotHintId : undefined}
         className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-pine px-4 py-3 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         {submitting ? "Enviando…" : "Entrar na lista VIP"}
