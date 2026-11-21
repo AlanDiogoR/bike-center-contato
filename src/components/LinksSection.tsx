@@ -286,13 +286,13 @@ export function LinksSection() {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${link.shortLabel}. ${link.label}`}
+            aria-label={link.label}
             onClick={() => trackOutboundClick(link.label, link.href, "social")}
             className="social-card"
           >
             <SocialIcon kind={link.icon} />
             <span className="text-xs font-semibold leading-tight text-ink">
-              {link.shortLabel}
+              {link.label}
             </span>
           </a>
         ))}

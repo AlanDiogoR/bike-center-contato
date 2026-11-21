@@ -104,22 +104,19 @@ export const googleReviewLink = {
 export const socialLinks = [
   {
     id: "instagram",
-    label: "Nosso Estoque no Instagram",
-    shortLabel: "Instagram",
+    label: "Estoque no Instagram",
     href: "https://www.instagram.com/bikecenterfartura",
     icon: "instagram" as const,
   },
   {
     id: "tiktok",
-    label: "Acelere com a gente no TikTok",
-    shortLabel: "TikTok",
+    label: "Vídeos no TikTok",
     href: "https://www.tiktok.com/@bikecenterfartura",
     icon: "tiktok" as const,
   },
   {
     id: "facebook",
-    label: "Siga nossa Página",
-    shortLabel: "Facebook",
+    label: "Página no Facebook",
     href: "https://www.facebook.com/profile.php?id=61576748073943",
     icon: "facebook" as const,
   },

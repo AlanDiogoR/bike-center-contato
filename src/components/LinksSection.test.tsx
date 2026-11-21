@@ -220,18 +220,33 @@ describe("LinksSection", () => {
 
   it("compacta as redes sociais em uma fileira com os destinos originais", () => {
     render(<LinksSection />);
-    expect(
-      screen.getByRole("link", { name: /Nosso Estoque no Instagram/ }),
-    ).toHaveAttribute("href", "https://www.instagram.com/bikecenterfartura");
-    expect(
-      screen.getByRole("link", { name: /Acelere com a gente no TikTok/ }),
-    ).toHaveAttribute("href", "https://www.tiktok.com/@bikecenterfartura");
-    expect(
-      screen.getByRole("link", { name: /Siga nossa Página/ }),
-    ).toHaveAttribute(
+    const instagram = screen.getByRole("link", { name: "Estoque no Instagram" });
+    const tiktok = screen.getByRole("link", { name: "Vídeos no TikTok" });
+    const facebook = screen.getByRole("link", { name: "Página no Facebook" });
+    expect(instagram).toHaveAttribute(
+      "href",
+      "https://www.instagram.com/bikecenterfartura",
+    );
+    expect(tiktok).toHaveAttribute(
+      "href",
+      "https://www.tiktok.com/@bikecenterfartura",
+    );
+    expect(facebook).toHaveAttribute(
       "href",
       "https://www.facebook.com/profile.php?id=61576748073943",
     );
+    for (const [link, text] of [
+      [instagram, "Estoque no Instagram"],
+      [tiktok, "Vídeos no TikTok"],
+      [facebook, "Página no Facebook"],
+    ] as const) {
+      expect(link).toHaveTextContent(text);
+      expect(link.textContent?.trim()).toBe(text);
+      expect(link.getAttribute("aria-label")?.startsWith(text)).toBe(true);
+    }
+    expect(
+      screen.queryByText(/Nosso Estoque|Acelere com a gente|Siga nossa Página/),
+    ).not.toBeInTheDocument();
   });
 
   it("sem utm_source=placa mantém o botão de avaliação visível (sem pulso) e o tutorial", () => {

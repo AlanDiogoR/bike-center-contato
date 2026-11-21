@@ -90,6 +90,11 @@ describe("links", () => {
       "tiktok",
       "facebook",
     ]);
+    expect(socialLinks.map((s) => s.label)).toEqual([
+      "Estoque no Instagram",
+      "Vídeos no TikTok",
+      "Página no Facebook",
+    ]);
   });
 
   it("expõe endereço e horário confirmados pelo dono da loja", () => {
