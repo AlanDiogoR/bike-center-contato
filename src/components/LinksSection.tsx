@@ -27,7 +27,9 @@ import {
 } from "@/lib/links";
 import { PIX_BUTTON_LABEL } from "@/lib/pix";
 import { trackOutboundClick } from "@/lib/track";
+import { VIP_ON } from "@/lib/vip";
 import { ReviewCarousel } from "@/components/ReviewCarousel";
+import { VipEntry } from "@/components/VipEntry";
 
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
@@ -220,6 +222,8 @@ export function LinksSection() {
           </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
+
+        {VIP_ON ? <VipEntry /> : null}
 
         <a
           href={mercadoLivreLink.href}
