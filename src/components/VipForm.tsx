@@ -68,6 +68,9 @@ export function VipForm() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [turnstileSize, setTurnstileSize] = useState<"flexible" | "compact">(
+    "flexible",
+  );
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
@@ -80,10 +83,14 @@ export function VipForm() {
     const container = turnstileContainerRef.current;
     if (!container) return;
 
+    const chosenSize: "flexible" | "compact" =
+      container.clientWidth >= 300 ? "flexible" : "compact";
+    setTurnstileSize(chosenSize);
+
     widgetRenderedRef.current = true;
     widgetIdRef.current = window.turnstile.render(container, {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
-      size: "flexible",
+      size: chosenSize,
       language: "pt-br",
       callback: (token: string) => {
         setTurnstileToken(token);
@@ -272,7 +279,7 @@ export function VipForm() {
 
   if (alreadyRegistered || submitted) {
     return (
-      <div className="mt-3 rounded-2xl border border-[#ead7b8] bg-white p-5 text-ink">
+      <div className="mt-3 rounded-2xl border border-[#ead7b8] bg-white p-4 text-ink sm:p-5">
         <p
           role="status"
           aria-live="polite"
@@ -301,7 +308,7 @@ export function VipForm() {
       ref={formRef}
       onSubmit={handleSubmit}
       noValidate
-      className="relative mt-3 space-y-4 rounded-2xl border border-[#ead7b8] bg-white p-5 text-ink"
+      className="relative mt-3 space-y-4 rounded-2xl border border-[#ead7b8] bg-white p-4 text-ink sm:p-5"
     >
       <div>
         <label
@@ -411,7 +418,7 @@ export function VipForm() {
       <div
         ref={turnstileContainerRef}
         data-testid="turnstile-container"
-        className="min-h-[65px] w-full"
+        className={`${turnstileSize === "compact" ? "min-h-[140px]" : "min-h-[65px]"} w-full max-w-full overflow-hidden`}
       />
 
       {errorMsg ? (

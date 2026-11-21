@@ -118,17 +118,29 @@ describe("VipForm e VipEntry", () => {
     expect(turnstileScripts()).toHaveLength(0);
     expect(renderMock).not.toHaveBeenCalled();
 
+    const container = screen.getByTestId("turnstile-container");
+    Object.defineProperty(container, "clientWidth", {
+      configurable: true,
+      value: 320,
+    });
+
     fireEvent.focusIn(screen.getByLabelText("Nome"));
 
     expect(turnstileScripts()).toHaveLength(1);
     expect(renderMock).toHaveBeenCalledTimes(1);
     expect(renderMock).toHaveBeenCalledWith(
-      screen.getByTestId("turnstile-container"),
+      container,
       expect.objectContaining({
         sitekey: CF_TEST_SITE_KEY,
         size: "flexible",
         language: "pt-br",
       }),
+    );
+    expect(container).toHaveClass(
+      "min-h-[65px]",
+      "w-full",
+      "max-w-full",
+      "overflow-hidden",
     );
 
     // Novo foco ou interseção posterior não duplicam script nem widget
@@ -141,6 +153,59 @@ describe("VipForm e VipEntry", () => {
     });
     expect(turnstileScripts()).toHaveLength(1);
     expect(renderMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Turnstile: escolhe size 'compact' quando clientWidth < 300 e 'flexible' quando >= 300, reservando a altura e overflow-hidden", () => {
+    process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = CF_TEST_SITE_KEY;
+    stubVisibilityApis();
+    mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 320 });
+    const renderMock = vi.fn(() => "w-compact");
+    window.turnstile = { render: renderMock, reset: vi.fn() };
+
+    const { unmount } = render(<VipForm />);
+    const containerNarrow = screen.getByTestId("turnstile-container");
+    Object.defineProperty(containerNarrow, "clientWidth", {
+      configurable: true,
+      value: 240,
+    });
+
+    fireEvent.focusIn(screen.getByLabelText("Nome"));
+    expect(renderMock).toHaveBeenCalledWith(
+      containerNarrow,
+      expect.objectContaining({
+        size: "compact",
+      }),
+    );
+    expect(containerNarrow).toHaveClass(
+      "min-h-[140px]",
+      "w-full",
+      "max-w-full",
+      "overflow-hidden",
+    );
+
+    unmount();
+    renderMock.mockClear();
+
+    render(<VipForm />);
+    const containerWide = screen.getByTestId("turnstile-container");
+    Object.defineProperty(containerWide, "clientWidth", {
+      configurable: true,
+      value: 320,
+    });
+
+    fireEvent.focusIn(screen.getByLabelText("Nome"));
+    expect(renderMock).toHaveBeenCalledWith(
+      containerWide,
+      expect.objectContaining({
+        size: "flexible",
+      }),
+    );
+    expect(containerWide).toHaveClass(
+      "min-h-[65px]",
+      "w-full",
+      "max-w-full",
+      "overflow-hidden",
+    );
   });
 
   it("Turnstile: carrega quando o form fora do viewport passa a intersectar", () => {
