@@ -241,10 +241,17 @@ export function LinksSection() {
             <FaMapMarkerAlt className="mt-1 h-4 w-4 shrink-0 text-[#9a3412]" aria-hidden />
             <span>{store.address.display}</span>
           </p>
-          <p className="mt-2.5 flex items-start gap-3 text-base font-medium leading-snug text-ink">
+          <div className="mt-2.5 flex items-start gap-3 text-base font-medium leading-snug text-ink">
             <FaClock className="mt-1 h-4 w-4 shrink-0 text-muted" aria-hidden />
-            <span>{store.hours.display}</span>
-          </p>
+            <ul className="min-w-0 flex-1" aria-label="Horários">
+              {store.hours.rows.map((row) => (
+                <li key={row.days} className="flex justify-between gap-3">
+                  <span>{row.days}</span>
+                  <span className="font-semibold">{row.hours}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <a

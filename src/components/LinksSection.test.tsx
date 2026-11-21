@@ -104,7 +104,18 @@ describe("LinksSection", () => {
     render(<LinksSection />);
     expect(screen.getByText("Loja física")).toBeInTheDocument();
     expect(screen.getByText(store.address.display)).toBeInTheDocument();
-    expect(screen.getByText(store.hours.display)).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "Loja física" });
+    const hours = within(card).getByRole("list", { name: "Horários" });
+    const rows = within(hours).getAllByRole("listitem");
+    expect(rows.map((li) => li.textContent)).toEqual([
+      "Seg–Sex8h–18h",
+      "Sábado8h–13h",
+      "DomingoFechado",
+    ]);
+    expect(rows.map((li) => li.textContent)).toEqual(
+      store.hours.rows.map((r) => `${r.days}${r.hours}`),
+    );
+    expect(within(card).queryByText(store.hours.display)).not.toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
