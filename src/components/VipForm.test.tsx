@@ -86,7 +86,7 @@ describe("VipForm e VipEntry", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("VipEntry mantém data-placa='hide' e só carrega o formulário após o clique", async () => {
+  it("VipEntry mantém data-placa='hide', define aria-controls só quando aberto e só carrega o formulário após o clique", async () => {
     const { container } = render(<VipEntry />);
     const wrapper = container.querySelector('[data-placa="hide"]');
     expect(wrapper).toBeInTheDocument();
@@ -95,10 +95,14 @@ describe("VipForm e VipEntry", () => {
       name: "Quero ofertas VIP no WhatsApp",
     });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).not.toHaveAttribute("aria-controls");
     expect(screen.queryByLabelText("Nome")).not.toBeInTheDocument();
 
     fireEvent.click(trigger);
     expect(trigger).toHaveAttribute("aria-expanded", "true");
+    const controlledId = trigger.getAttribute("aria-controls");
+    expect(controlledId).toBeTruthy();
+    expect(document.getElementById(controlledId!)).toBeInTheDocument();
 
     expect(await screen.findByLabelText("Nome")).toBeInTheDocument();
   });

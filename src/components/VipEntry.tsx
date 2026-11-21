@@ -24,7 +24,7 @@ export function VipEntry() {
       <button
         type="button"
         aria-expanded={open}
-        aria-controls={VIP_PANEL_ID}
+        aria-controls={open ? VIP_PANEL_ID : undefined}
         onClick={() => setOpen((prev) => !prev)}
         className="cta-card min-h-14 w-full"
       >
