@@ -188,10 +188,10 @@ export function LinksSection() {
           target="_blank"
           rel="noopener noreferrer"
           data-placa="hide"
-          aria-label={`Avalie no Google — ${store.name}`}
+          aria-label={`${googleReviewLink.label} — ${store.name}`}
           onClick={() =>
             trackOutboundClick(
-              googleReviewLink.prominentLabel,
+              googleReviewLink.label,
               googleReviewLink.href,
               "review",
             )
@@ -202,7 +202,7 @@ export function LinksSection() {
             <FaStar className="h-6 w-6 text-[#9a3412]" aria-hidden />
           </span>
           <span className="min-w-0 flex-1 whitespace-nowrap leading-snug">
-            Avalie no Google
+            {googleReviewLink.label}
           </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>

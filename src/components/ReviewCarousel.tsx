@@ -17,7 +17,7 @@ const SLIDES = [
     id: "site",
     step: "1",
     title: "Toque em Avalie",
-    caption: "No site, toque no botão amarelo “Avalie a Bike Center no Google”.",
+    caption: `No site, toque no botão “${googleReviewLink.label}”.`,
   },
   {
     id: "maps",
@@ -102,7 +102,7 @@ function SiteSlide() {
           <div className="relative rounded-xl bg-sun px-2 py-2 text-[10px] font-bold text-ink ring-2 ring-sunset">
             <span className="flex items-center gap-1.5">
               <FaStar className="h-3.5 w-3.5 text-[#9a3412]" aria-hidden />
-              Avalie a Bike Center no Google
+              {googleReviewLink.label}
             </span>
             <StepBadge n="1" />
           </div>

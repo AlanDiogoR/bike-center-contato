@@ -19,9 +19,13 @@ describe("ReviewCarousel", () => {
     expect(screen.getByText("Toque em Avalie")).toBeInTheDocument();
     expect(screen.queryByText("Abra o Instagram")).not.toBeInTheDocument();
     expect(screen.queryByText("Link da bio")).not.toBeInTheDocument();
+    expect(screen.getByText("Avalie no Google")).toBeInTheDocument();
     expect(
-      screen.getByText("Avalie a Bike Center no Google"),
+      screen.getByText("No site, toque no botão “Avalie no Google”."),
     ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Avalie a Bike Center no Google|Nos avalie no Google/),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Toque no botão")).toBeInTheDocument();
     expect(screen.getByText("Fartura/SP")).toBeInTheDocument();
     expect(

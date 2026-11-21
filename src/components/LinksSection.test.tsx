@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import HomePage from "@/app/page";
 import { LinksSection } from "./LinksSection";
@@ -9,6 +9,7 @@ import {
   store,
   whatsappSalesLinks,
 } from "@/lib/links";
+import { trackOutboundClick } from "@/lib/track";
 
 vi.mock("@/lib/track", () => ({
   trackOutboundClick: vi.fn(),
@@ -170,6 +171,35 @@ describe("LinksSection", () => {
     expect(
       vivo.compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("usa o rótulo único “Avalie no Google” no botão da home padrão, no mock do passo 1 e na legenda", () => {
+    render(<LinksSection />);
+    expect(googleReviewLink.label).toBe("Avalie no Google");
+    const review = screen.getByRole("link", { name: DEFAULT_REVIEW_ARIA });
+    expect(review.querySelector(".whitespace-nowrap")).toHaveTextContent(
+      googleReviewLink.label,
+    );
+    fireEvent.click(review);
+    expect(trackOutboundClick).toHaveBeenCalledWith(
+      googleReviewLink.label,
+      googleReviewLink.href,
+      "review",
+    );
+    const tutorial = screen.getByRole("region", {
+      name: "Passo a passo para avaliar no Google",
+    });
+    expect(within(tutorial).getByText(googleReviewLink.label)).toBeVisible();
+    expect(
+      within(tutorial).getByText("No site, toque no botão “Avalie no Google”."),
+    ).toBeVisible();
+    expect(document.body.textContent).not.toMatch(
+      /Avalie a Bike Center no Google|Nos avalie no Google/,
+    );
+    // CTA grande da variante placa permanece igual.
+    expect(document.querySelector('a[data-placa="show"]')).toHaveTextContent(
+      PLACA_CTA,
+    );
   });
 
   it("não renderiza oferta no topo quando o slot está vazio", () => {
