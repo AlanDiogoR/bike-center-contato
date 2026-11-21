@@ -272,6 +272,7 @@ export function LinksSection() {
           href={googleMapsLink.href}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={googleMapsLink.label}
           onClick={() =>
             trackOutboundClick(googleMapsLink.label, googleMapsLink.href, "maps")
           }

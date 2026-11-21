@@ -117,6 +117,10 @@ describe("LinksSection", () => {
     );
     expect(within(card).queryByText(store.hours.display)).not.toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
+    expect(
+      screen.getByRole("link", { name: "Como chegar — Google Maps" }),
+    ).toBe(maps);
+    expect(maps).toHaveAttribute("aria-label", "Como chegar — Google Maps");
     expect(maps).toHaveAccessibleName("Como chegar — Google Maps");
     expect(maps.textContent?.replace(/\s+/g, " ").trim()).toBe(
       "Como chegar — Google Maps",
