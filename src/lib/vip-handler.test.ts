@@ -195,6 +195,57 @@ describe("handleVip (/api/vip)", () => {
     expect(rateStore.setJSON).not.toHaveBeenCalled();
   });
 
+  it("IP do cliente: exige x-nf-client-connection-ip e devolve 503 sem chamar fetch ou rateStore quando ausente ou quando só há X-Forwarded-For", async () => {
+    const fetchMock = createMockFetch();
+    const rateStore = createMemoryRateStore();
+    const env = createBaseEnv();
+
+    // Sem x-nf-client-connection-ip -> 503
+    const reqNoIp = new Request(
+      "https://contatobikecenter.netlify.app/api/vip",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createValidPayload()),
+      },
+    );
+    const resNoIp = await handleVip(reqNoIp, {
+      env,
+      fetch: fetchMock,
+      rateStore,
+    });
+    expect(resNoIp.status).toBe(503);
+    expect(await resNoIp.json()).toEqual({ ok: false, error: "indisponivel" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+    expect(rateStore.setJSON).not.toHaveBeenCalled();
+
+    // Só com X-Forwarded-For (sem x-nf-client-connection-ip) -> 503
+    const reqOnlyXff = new Request(
+      "https://contatobikecenter.netlify.app/api/vip",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Forwarded-For": "198.51.100.10",
+        },
+        body: JSON.stringify(createValidPayload()),
+      },
+    );
+    const resOnlyXff = await handleVip(reqOnlyXff, {
+      env,
+      fetch: fetchMock,
+      rateStore,
+    });
+    expect(resOnlyXff.status).toBe(503);
+    expect(await resOnlyXff.json()).toEqual({
+      ok: false,
+      error: "indisponivel",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+  });
+
   it("3. Turnstile: secret de falha (2x...AA / success:false) devolve 403 e não chama Supabase; secret de sucesso (1x...AA / success:true) envia secret, response e remoteip", async () => {
     const rateStore = createMemoryRateStore();
     const fetchFail = createMockFetch({ turnstileSuccess: false });

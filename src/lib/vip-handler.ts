@@ -67,15 +67,9 @@ export function hashIpKey(salt: string, ip: string): string {
   return `ip:${digest}`;
 }
 
-function extractClientIp(req: Request): string {
+function extractClientIp(req: Request): string | null {
   const nfIp = req.headers.get("x-nf-client-connection-ip")?.trim();
-  if (nfIp) return nfIp;
-  const xff = req.headers.get("x-forwarded-for");
-  if (xff) {
-    const first = xff.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return "unknown";
+  return nfIp || null;
 }
 
 function parseStoredTimestamps(raw: unknown): number[] {
@@ -187,6 +181,9 @@ export async function handleVip(
 
   // 4. Rate limit por IP: 5 / 10 min em janela deslizante (fail-closed -> 503)
   const clientIp = extractClientIp(req);
+  if (!clientIp) {
+    return jsonResponse(503, { ok: false, error: "indisponivel" });
+  }
   const rateKey = hashIpKey(vipRateSalt, clientIp);
   const currentNow = resolveNow(deps.now);
 
