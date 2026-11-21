@@ -280,7 +280,10 @@ export function LinksSection() {
           <span className="cta-card-icon">
             <SiGooglemaps className="h-8 w-8" style={{ color: "#1a73e8" }} aria-hidden />
           </span>
-          <span className="flex-1 leading-snug">{googleMapsLink.label}</span>
+          <span className="flex-1 leading-snug">
+            {googleMapsLink.action} —{" "}
+            <span className="whitespace-nowrap">{googleMapsLink.brand}</span>
+          </span>
           <FaExternalLinkAlt className="h-5 w-5 shrink-0 text-muted" aria-hidden />
         </a>
       </div>

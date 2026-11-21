@@ -117,6 +117,16 @@ describe("LinksSection", () => {
     );
     expect(within(card).queryByText(store.hours.display)).not.toBeInTheDocument();
     const maps = screen.getByRole("link", { name: googleMapsLink.label });
+    expect(maps).toHaveAccessibleName("Como chegar — Google Maps");
+    expect(maps.textContent?.replace(/\s+/g, " ").trim()).toBe(
+      "Como chegar — Google Maps",
+    );
+    const brand = maps.querySelector(".whitespace-nowrap");
+    expect(brand).toHaveTextContent(/^Google Maps$/);
+    expect(brand?.tagName).toBe("SPAN");
+    expect(googleMapsLink.label).toBe(
+      `${googleMapsLink.action} — ${googleMapsLink.brand}`,
+    );
     expect(maps).toHaveAttribute("href", googleMapsLink.href);
     expect(maps.getAttribute("href")).toContain("destination=-23.3883268");
     expect(maps.getAttribute("href")).toContain("-49.5062797");

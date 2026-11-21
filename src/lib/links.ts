@@ -86,6 +86,9 @@ export const mercadoLivreLink = {
 
 export const googleMapsLink = {
   label: "Como chegar — Google Maps",
+  /** Partes do rótulo: a marca fica em `whitespace-nowrap` para não ficar órfã. */
+  action: "Como chegar",
+  brand: "Google Maps",
   href: "https://www.google.com/maps/dir/?api=1&destination=-23.3883268%2C-49.5062797",
 } as const;
 
