@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import {
   FaClock,
@@ -30,12 +29,12 @@ import { PIX_BUTTON_LABEL } from "@/lib/pix";
 import { trackOutboundClick } from "@/lib/track";
 import { ReviewCarousel } from "@/components/ReviewCarousel";
 
-// Comparação literal inline: o DefinePlugin troca a env no build e o webpack (ConstPlugin)
-// descarta o import() do ramo morto, então com a flag desligada nada do VIP entra no bundle.
-const VipEntry =
+// Comparação literal inline: o DefinePlugin troca a env no build e o webpack descarta o
+// require() do ramo morto. Com a flag desligada, nem o VipSlot nem o next/dynamic entram no bundle.
+const VipEntry: React.ComponentType | null =
   process.env.NEXT_PUBLIC_VIP_ENABLED === "true" &&
   process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-    ? dynamic(() => import("@/components/VipEntry"), { ssr: true })
+    ? require("@/components/VipSlot").default
     : null;
 
 const focusRing =
