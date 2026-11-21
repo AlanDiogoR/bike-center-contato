@@ -7,17 +7,17 @@ Página estilo Linktree em **Next.js 14** (App Router), **Tailwind CSS** e **Fra
 - Next.js 14, React 18, TypeScript
 - Tailwind CSS
 - Framer Motion
-- **react-icons** (WhatsApp, Mercado Pago, Google Maps, redes sociais, link externo)
+- **react-icons** (Google Maps, redes sociais, link externo, avaliação, endereço, horário e Pix) e SVGs inline em `src/components/BrandSymbols.tsx` (`WhatsAppSymbol` e `MercadoLivreIcon`)
 - Vitest + Testing Library
 - Deploy sugerido: **Netlify** (`netlify.toml` + `@netlify/plugin-nextjs`)
 
 ## Ícones
 
-Todos os ícones vêm de **react-icons**: `FaWhatsapp`, `FaExternalLinkAlt`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`, `SiMercadopago`.
+Os ícones de interface e redes sociais vêm de **react-icons** (`FaExternalLinkAlt`, `FaStar`, `FaQrcode`, `FaMapMarkerAlt`, `FaClock`, `FaChevronLeft`, `FaChevronRight`, `SiGooglemaps`, `SiInstagram`, `SiTiktok`, `SiFacebook`), enquanto as marcas do WhatsApp e do Mercado Livre usam SVGs inline definidos em **`src/components/BrandSymbols.tsx`** (`WhatsAppSymbol`, com `<symbol id="icon-whatsapp">` reutilizado via `<use href="#icon-whatsapp" />`, e `MercadoLivreIcon`).
 
 A logo usa **`public/logo.png`** (fundo transparente) com **`next/image`**, dentro de um **badge circular** branco com anel **`#9a3412`**.
 
-O conjunto **Simple Icons** não inclui o logotipo oficial do Mercado Livre; o botão da loja usa **`SiMercadopago`** (mesmo ecossistema Mercado) com cor **#3483FA** sobre o fundo amarelo do card, alinhado à identidade visual do marketplace.
+O botão da loja no Mercado Livre e o mock do carrossel usam o componente **`MercadoLivreIcon`** (`src/components/BrandSymbols.tsx`), que renderiza o logotipo oficial do Mercado Livre em SVG inline (`viewBox="0 0 163 113"`, cores `#2d3277`, `#ffd100` e `#fff`).
 
 **Favicon:** `src/app/icon.svg` (marca “BC”) + redirecionamento de `/favicon.ico` → `/icon.svg` no `next.config.mjs` para navegadores que ainda pedem o `.ico`.
 
@@ -100,7 +100,8 @@ Sem esse parâmetro, a página permanece a de hoje. A troca é feita no HTML est
 
 - `src/app/page.tsx` — landing
 - `src/app/layout.tsx` — metadata, SEO, JSON-LD
-- `src/components/LinksSection.tsx` — botões e animações (inclui **Nos avalie no Google** e o CTA da placa)
+- `src/components/LinksSection.tsx` — botões e animações (inclui **Avalie no Google** e o CTA da placa)
+- `src/components/BrandSymbols.tsx` — SVGs inline de marca (`WhatsAppSymbol` e `MercadoLivreIcon`)
 - `src/components/ReviewCarousel.tsx` — carrossel estático do passo a passo (site → Maps → escrever → publicar)
 - `src/lib/query.ts` — normalização das chaves de UTM (`trim`, minúsculas, sem espaços ou `%20`)
 - `src/components/Analytics.tsx` — GTM e Meta Pixel (quando configurados)
