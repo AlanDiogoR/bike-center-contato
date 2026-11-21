@@ -69,14 +69,17 @@ export function normalizeBrWhatsapp(input: string): string | null {
  * Gera vCard 3.0 com CRLF e exclusivamente o número do WhatsApp Claro.
  */
 export function buildVcard(): string {
-  return [
-    "BEGIN:VCARD",
-    "VERSION:3.0",
-    "FN:Bike Center Fartura",
-    "ORG:Bike Center Fartura",
-    `TEL;TYPE=CELL:+${PHONE_CLARO}`,
-    "END:VCARD",
-  ].join("\r\n");
+  return (
+    [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      "N:;Bike Center Fartura;;;",
+      "FN:Bike Center Fartura",
+      "ORG:Bike Center Fartura",
+      `TEL;TYPE=CELL:+${PHONE_CLARO}`,
+      "END:VCARD",
+    ].join("\r\n") + "\r\n"
+  );
 }
 
 export function downloadVcard(): void {

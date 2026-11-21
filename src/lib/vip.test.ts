@@ -77,21 +77,18 @@ describe("vip utils", () => {
   });
 
   describe("buildVcard", () => {
-    it("gera vCard 3.0 com CRLF entre as linhas e apenas o WhatsApp Claro", () => {
+    it("gera vCard 3.0 com campo N, CRLF em todas as linhas e apenas o WhatsApp Claro", () => {
       const vcard = buildVcard();
-      expect(vcard).toContain("\r\n");
-      const lines = vcard.split("\r\n");
-      expect(lines).toEqual([
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        "FN:Bike Center Fartura",
-        "ORG:Bike Center Fartura",
-        `TEL;TYPE=CELL:+${PHONE_CLARO}`,
-        "END:VCARD",
-      ]);
+      expect(vcard).toBe(
+        "BEGIN:VCARD\r\nVERSION:3.0\r\nN:;Bike Center Fartura;;;\r\nFN:Bike Center Fartura\r\nORG:Bike Center Fartura\r\nTEL;TYPE=CELL:+5514991667793\r\nEND:VCARD\r\n",
+      );
       expect(vcard).toContain(PHONE_CLARO);
       expect(vcard).not.toContain(PHONE_VIVO);
-      expect(vcard.replace(/\r\n/g, "")).not.toContain("\n");
+      expect(vcard).not.toMatch(/(?<!\r)\n/);
+      const nLines = vcard
+        .split("\r\n")
+        .filter((line) => line.startsWith("N:"));
+      expect(nLines).toEqual(["N:;Bike Center Fartura;;;"]);
     });
   });
 
