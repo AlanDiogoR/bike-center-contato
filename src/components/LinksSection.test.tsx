@@ -213,6 +213,31 @@ describe("LinksSection", () => {
     );
   });
 
+  it("usa o mesmo critério nos três ícones de rede: monocromático na cor oficial sólida, sem degradê", () => {
+    render(<LinksSection />);
+    const expected = {
+      "Estoque no Instagram": ["instagram", "rgb(193, 53, 132)"],
+      "Vídeos no TikTok": ["tiktok", "rgb(23, 21, 22)"],
+      "Página no Facebook": ["facebook", "rgb(24, 119, 242)"],
+    } as const;
+    for (const [name, [kind, color]] of Object.entries(expected)) {
+      const link = screen.getByRole("link", { name });
+      const svgs = link.querySelectorAll("svg");
+      expect(svgs).toHaveLength(1);
+      const svg = svgs[0];
+      expect(svg).toHaveAttribute("data-icon", kind);
+      expect(svg).toHaveAttribute("fill", "currentColor");
+      expect(svg.style.color).toBe(color);
+      expect(svg.className.baseVal).toBe("h-6 w-6 shrink-0");
+      expect(
+        svg.querySelectorAll("linearGradient, radialGradient, [fill^='url(']"),
+      ).toHaveLength(0);
+      svg.querySelectorAll("path").forEach((path) => {
+        expect(path.getAttribute("fill")).toBeNull();
+      });
+    }
+  });
+
   it("não renderiza oferta no topo quando o slot está vazio", () => {
     render(<LinksSection />);
     expect(screen.queryByRole("link", { name: /oferta/i })).not.toBeInTheDocument();

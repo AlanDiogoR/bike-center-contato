@@ -32,18 +32,32 @@ import { ReviewCarousel } from "@/components/ReviewCarousel";
 const focusRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
 
+/**
+ * Critério único dos ícones de rede: glifo monocromático (Simple Icons) na cor
+ * oficial sólida de cada marca. Sem degradê, sem fundo e sem cor por variante.
+ */
+const SOCIAL_ICON_COLORS = {
+  instagram: "#C13584",
+  tiktok: "#171516",
+  facebook: "#1877F2",
+} as const;
+
+const SOCIAL_ICONS = {
+  instagram: SiInstagram,
+  tiktok: SiTiktok,
+  facebook: SiFacebook,
+} as const;
+
 function SocialIcon({ kind }: { kind: (typeof socialLinks)[number]["icon"] }) {
-  const className = "h-6 w-6 shrink-0";
-  switch (kind) {
-    case "instagram":
-      return <SiInstagram className={className} style={{ color: "#C13584" }} aria-hidden />;
-    case "tiktok":
-      return <SiTiktok className={className} style={{ color: "#171516" }} aria-hidden />;
-    case "facebook":
-      return <SiFacebook className={className} style={{ color: "#1877F2" }} aria-hidden />;
-    default:
-      return null;
-  }
+  const Icon = SOCIAL_ICONS[kind];
+  return (
+    <Icon
+      className="h-6 w-6 shrink-0"
+      style={{ color: SOCIAL_ICON_COLORS[kind] }}
+      data-icon={kind}
+      aria-hidden
+    />
+  );
 }
 
 function PixButton({
