@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { googleMapsPlaceLink, store } from "@/lib/links";
+import { store } from "@/lib/links";
 
 export function Logo() {
   return (
@@ -22,14 +22,9 @@ export function Logo() {
       <p className="mt-2 max-w-sm text-center text-base font-medium leading-snug text-muted">
         {store.tagline}
       </p>
-      <a
-        href={googleMapsPlaceLink.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-1 inline-flex min-h-11 items-center text-center text-base font-semibold text-[#9a3412] underline-offset-4 transition hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sunset"
-      >
+      <p className="mt-1 text-center text-base font-semibold text-[#9a3412]">
         {store.trustLine}
-      </a>
+      </p>
     </div>
   );
 }

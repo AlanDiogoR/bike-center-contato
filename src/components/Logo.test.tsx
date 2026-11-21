@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Logo } from "./Logo";
-import { googleMapsPlaceLink, store } from "@/lib/links";
+import { store } from "@/lib/links";
 
 vi.mock("next/image", () => ({
   default: ({
@@ -37,11 +37,16 @@ describe("Logo", () => {
     expect(img.parentElement?.className).not.toContain("ring-sun");
   });
 
-  it("mostra a tagline e a linha de confiança com link para o Maps", () => {
-    render(<Logo />);
+  it("mostra a tagline e a linha de confiança como texto simples (sem link)", () => {
+    const { container } = render(<Logo />);
     expect(screen.getByText(store.tagline)).toBeInTheDocument();
-    const trust = screen.getByRole("link", { name: store.trustLine });
-    expect(trust).toHaveAttribute("href", googleMapsPlaceLink.href);
+    const trust = screen.getByText(store.trustLine);
+    expect(trust.tagName).toBe("P");
+    expect(trust.closest("a")).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: store.trustLine }),
+    ).not.toBeInTheDocument();
+    expect(container.querySelectorAll("a")).toHaveLength(0);
   });
 
   it("tem exatamente um H1 visível com o nome da loja", () => {
