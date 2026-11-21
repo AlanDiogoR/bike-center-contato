@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import { SiGooglemaps } from "react-icons/si";
 import { MercadoLivreIcon } from "@/components/BrandSymbols";
-import { googleReviewLink } from "@/lib/links";
+import { googleReviewLink, store } from "@/lib/links";
 import { trackOutboundClick } from "@/lib/track";
 
 const SLIDES = [
@@ -92,7 +92,7 @@ function SiteSlide() {
             <span className="text-[8px] font-black text-ink">BC</span>
           </div>
           <p className="mt-1 text-center text-[8px] font-medium text-muted">
-            Motos, bicicletas e acessórios
+            {store.tagline}
           </p>
           <p className="text-center text-[8px] font-semibold text-[#9a3412]">
             Fartura/SP

@@ -27,6 +27,7 @@ describe("ReviewCarousel", () => {
       screen.queryByText(/Avalie a Bike Center no Google|Nos avalie no Google/),
     ).not.toBeInTheDocument();
     expect(screen.getByText("Toque no botão")).toBeInTheDocument();
+    expect(screen.getByText("Oficina, peças e acessórios")).toBeInTheDocument();
     expect(screen.getByText("Fartura/SP")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /Avaliar agora no Google/i }),

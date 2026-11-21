@@ -39,7 +39,8 @@ describe("Logo", () => {
 
   it("mostra a tagline e a linha de confiança como texto simples (sem link)", () => {
     const { container } = render(<Logo />);
-    expect(screen.getByText(store.tagline)).toBeInTheDocument();
+    expect(store.tagline).toBe("Oficina, peças e acessórios");
+    expect(screen.getByText("Oficina, peças e acessórios")).toBeInTheDocument();
     const trust = screen.getByText(store.trustLine);
     expect(trust.tagName).toBe("P");
     expect(trust.closest("a")).toBeNull();

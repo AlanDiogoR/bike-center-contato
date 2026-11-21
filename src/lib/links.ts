@@ -18,7 +18,7 @@ export function formatBrMobileDisplay(phoneDigits: string): string {
 
 export const store = {
   name: "Bike Center Fartura",
-  tagline: "Motos, bicicletas e acessórios em Fartura/SP",
+  tagline: "Oficina, peças e acessórios",
   footerTagline: "Motos, bicicletas, acessórios, peças e oficina em Fartura/SP",
   trustLine: "Há mais de 30 anos em Fartura",
   city: "Fartura",
