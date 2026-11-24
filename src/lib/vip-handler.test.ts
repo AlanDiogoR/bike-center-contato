@@ -16,7 +16,7 @@ function createBaseEnv(overrides: Record<string, string | undefined> = {}) {
     VIP_ENABLED: "true",
     TURNSTILE_SECRET: CF_TEST_SECRET_PASS,
     SUPABASE_URL: "https://example.supabase.co",
-    SUPABASE_ANON_KEY: "test-anon-key",
+    SUPABASE_SERVICE_ROLE_KEY: "test-service-role-key",
     VIP_RATE_SALT: "test-rate-salt-2026",
     ...overrides,
   };
@@ -151,6 +151,47 @@ describe("handleVip (/api/vip)", () => {
     });
     expect(res.status).toBe(503);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+
+    // Sem SUPABASE_SERVICE_ROLE_KEY -> 503 e zero chamadas a fetch/store
+    const resMissingServiceRole = await handleVip(
+      makePostRequest(createValidPayload()),
+      {
+        env: createBaseEnv({ SUPABASE_SERVICE_ROLE_KEY: "" }),
+        fetch: fetchMock,
+        rateStore,
+      },
+    );
+    expect(resMissingServiceRole.status).toBe(503);
+    expect(await resMissingServiceRole.json()).toEqual({
+      ok: false,
+      error: "indisponivel",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+    expect(rateStore.setJSON).not.toHaveBeenCalled();
+
+    // Só com a antiga chave anon (sem SUPABASE_SERVICE_ROLE_KEY) -> 503 (sem fallback)
+    const legacyAnonEnvKey = ["SUPABASE", "ANON", "KEY"].join("_");
+    const resOnlyLegacyAnon = await handleVip(
+      makePostRequest(createValidPayload()),
+      {
+        env: createBaseEnv({
+          SUPABASE_SERVICE_ROLE_KEY: undefined,
+          [legacyAnonEnvKey]: "test-anon-key",
+        }),
+        fetch: fetchMock,
+        rateStore,
+      },
+    );
+    expect(resOnlyLegacyAnon.status).toBe(503);
+    expect(await resOnlyLegacyAnon.json()).toEqual({
+      ok: false,
+      error: "indisponivel",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(rateStore.get).not.toHaveBeenCalled();
+    expect(rateStore.setJSON).not.toHaveBeenCalled();
   });
 
   it("rejeita método diferente de POST com 405, Content-Type inválido ou corpo > 4 KB com 400", async () => {
@@ -638,8 +679,8 @@ describe("handleVip (/api/vip)", () => {
     const [rpcUrl, rpcInit] = fetchMock.mock.calls[1];
     expect(rpcUrl).toBe("https://example.supabase.co/rest/v1/rpc/vip_lead_signup");
     const rpcHeaders = rpcInit?.headers as Record<string, string>;
-    expect(rpcHeaders.apikey).toBe("test-anon-key");
-    expect(rpcHeaders.Authorization).toBe("Bearer test-anon-key");
+    expect(rpcHeaders.apikey).toBe("test-service-role-key");
+    expect(rpcHeaders.Authorization).toBe("Bearer test-service-role-key");
     expect(JSON.parse(String(rpcInit?.body))).toEqual({
       p_nome: "Carlos Eduardo",
       p_whatsapp_e164: "+5514991667793",

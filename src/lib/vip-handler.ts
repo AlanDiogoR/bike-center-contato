@@ -167,10 +167,10 @@ export async function handleVip(
 
   const turnstileSecret = readEnv(deps.env, "TURNSTILE_SECRET");
   const supabaseUrl = readEnv(deps.env, "SUPABASE_URL");
-  const supabaseAnonKey = readEnv(deps.env, "SUPABASE_ANON_KEY");
+  const supabaseServiceRoleKey = readEnv(deps.env, "SUPABASE_SERVICE_ROLE_KEY");
   const vipRateSalt = readEnv(deps.env, "VIP_RATE_SALT");
 
-  if (!turnstileSecret || !supabaseUrl || !supabaseAnonKey || !vipRateSalt) {
+  if (!turnstileSecret || !supabaseUrl || !supabaseServiceRoleKey || !vipRateSalt) {
     return jsonResponse(503, { ok: false, error: "indisponivel" });
   }
 
@@ -374,8 +374,8 @@ export async function handleVip(
     const rpcRes = await deps.fetch(rpcUrl, {
       method: "POST",
       headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
+        apikey: supabaseServiceRoleKey,
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
