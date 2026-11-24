@@ -67,20 +67,28 @@ export function normalizeBrWhatsapp(input: string): string | null {
   return WHATSAPP_E164_RE.test(e164) ? e164 : null;
 }
 
+const CRLF = "\r\n";
+
 /**
  * Gera vCard 3.0 com CRLF e exclusivamente o número do WhatsApp Claro.
  */
 export function buildVcard(): string {
   return (
-    [
-      "BEGIN:VCARD",
-      "VERSION:3.0",
-      "N:;Bike Center Fartura;;;",
-      "FN:Bike Center Fartura",
-      "ORG:Bike Center Fartura",
-      `TEL;TYPE=CELL:+${PHONE_CLARO}`,
-      "END:VCARD",
-    ].join("\r\n") + "\r\n"
+    "BEGIN:VCARD" +
+    CRLF +
+    "VERSION:3.0" +
+    CRLF +
+    "N:;Bike Center Fartura;;;" +
+    CRLF +
+    "FN:Bike Center Fartura" +
+    CRLF +
+    "ORG:Bike Center Fartura" +
+    CRLF +
+    "TEL;TYPE=CELL:+" +
+    PHONE_CLARO +
+    CRLF +
+    "END:VCARD" +
+    CRLF
   );
 }
 
