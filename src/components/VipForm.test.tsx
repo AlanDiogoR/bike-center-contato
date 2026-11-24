@@ -112,6 +112,7 @@ describe("VipForm e VipEntry", () => {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = CF_TEST_SITE_KEY;
     const observers = stubVisibilityApis();
     mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 360 });
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(320);
     const renderMock = vi.fn(() => "widget-test-1");
     window.turnstile = { render: renderMock, reset: vi.fn() };
 
@@ -124,10 +125,12 @@ describe("VipForm e VipEntry", () => {
     expect(renderMock).not.toHaveBeenCalled();
 
     const container = screen.getByTestId("turnstile-container");
-    Object.defineProperty(container, "clientWidth", {
-      configurable: true,
-      value: 320,
-    });
+    expect(container).toHaveClass(
+      "h-[72px]",
+      "w-full",
+      "max-w-full",
+      "overflow-hidden",
+    );
 
     fireEvent.focusIn(screen.getByLabelText("Nome"));
 
@@ -142,12 +145,6 @@ describe("VipForm e VipEntry", () => {
         language: "pt-br",
       }),
     );
-    expect(container).toHaveClass(
-      "min-h-[65px]",
-      "w-full",
-      "max-w-full",
-      "overflow-hidden",
-    );
 
     // Novo foco ou interseção posterior não duplicam script nem widget
     fireEvent.focusIn(screen.getByLabelText("WhatsApp"));
@@ -161,19 +158,25 @@ describe("VipForm e VipEntry", () => {
     expect(renderMock).toHaveBeenCalledTimes(1);
   });
 
-  it("Turnstile: escolhe size 'compact' quando clientWidth < 300 e 'flexible' quando >= 300, reservando a altura e overflow-hidden", () => {
+  it("Turnstile: escolhe size 'compact' quando clientWidth < 300 e 'flexible' quando >= 300 desde a montagem, reservando a altura fixa e overflow-hidden", () => {
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = CF_TEST_SITE_KEY;
     stubVisibilityApis();
     mockFormRect({ top: 2000, bottom: 2400, left: 0, right: 320 });
+    const widthSpy = vi
+      .spyOn(HTMLElement.prototype, "clientWidth", "get")
+      .mockReturnValue(240);
     const renderMock = vi.fn(() => "w-compact");
     window.turnstile = { render: renderMock, reset: vi.fn() };
 
     const { unmount } = render(<VipForm />);
     const containerNarrow = screen.getByTestId("turnstile-container");
-    Object.defineProperty(containerNarrow, "clientWidth", {
-      configurable: true,
-      value: 240,
-    });
+    expect(containerNarrow).toHaveClass(
+      "h-[147px]",
+      "w-full",
+      "max-w-full",
+      "overflow-hidden",
+    );
+    expect(renderMock).not.toHaveBeenCalled();
 
     fireEvent.focusIn(screen.getByLabelText("Nome"));
     expect(renderMock).toHaveBeenCalledWith(
@@ -182,22 +185,20 @@ describe("VipForm e VipEntry", () => {
         size: "compact",
       }),
     );
-    expect(containerNarrow).toHaveClass(
-      "min-h-[140px]",
+
+    unmount();
+    renderMock.mockClear();
+    widthSpy.mockReturnValue(320);
+
+    render(<VipForm />);
+    const containerWide = screen.getByTestId("turnstile-container");
+    expect(containerWide).toHaveClass(
+      "h-[72px]",
       "w-full",
       "max-w-full",
       "overflow-hidden",
     );
-
-    unmount();
-    renderMock.mockClear();
-
-    render(<VipForm />);
-    const containerWide = screen.getByTestId("turnstile-container");
-    Object.defineProperty(containerWide, "clientWidth", {
-      configurable: true,
-      value: 320,
-    });
+    expect(renderMock).not.toHaveBeenCalled();
 
     fireEvent.focusIn(screen.getByLabelText("Nome"));
     expect(renderMock).toHaveBeenCalledWith(
@@ -205,12 +206,6 @@ describe("VipForm e VipEntry", () => {
       expect.objectContaining({
         size: "flexible",
       }),
-    );
-    expect(containerWide).toHaveClass(
-      "min-h-[65px]",
-      "w-full",
-      "max-w-full",
-      "overflow-hidden",
     );
   });
 
@@ -277,6 +272,8 @@ describe("VipForm e VipEntry", () => {
       name: /Entrar na lista VIP/i,
     });
     const hint = screen.getByText("Verificando que você não é um robô…");
+    expect(hint.tagName).toBe("P");
+    expect(hint).toHaveClass("min-h-4");
     expect(submitBtn).toHaveAttribute("aria-describedby", hint.id);
 
     fireEvent.change(screen.getByLabelText("Nome"), {
@@ -297,6 +294,9 @@ describe("VipForm e VipEntry", () => {
     });
     expect(submitBtn).not.toBeDisabled();
     expect(submitBtn).not.toHaveAttribute("aria-describedby");
+    expect(document.getElementById(hint.id)).toBe(hint);
+    expect(hint).toBeInTheDocument();
+    expect(hint).toHaveTextContent("");
     expect(
       screen.queryByText("Verificando que você não é um robô…"),
     ).not.toBeInTheDocument();

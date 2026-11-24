@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   CONSENT_TEXT,
   CONSENT_TEXT_VERSION,
@@ -79,21 +86,25 @@ export function VipForm() {
   const widgetRenderedRef = useRef(false);
   const widgetIdRef = useRef<string | undefined>(undefined);
 
+  useLayoutEffect(() => {
+    if (alreadyRegistered || submitted) return;
+    const container = turnstileContainerRef.current;
+    if (!container) return;
+    const width = container.clientWidth;
+    setTurnstileSize(width >= 300 ? "flexible" : "compact");
+  }, [alreadyRegistered, submitted]);
+
   const renderTurnstileWidget = useCallback(() => {
     if (widgetRenderedRef.current) return;
     if (typeof window === "undefined" || !window.turnstile?.render) return;
     const container = turnstileContainerRef.current;
     if (!container) return;
 
-    const chosenSize: "flexible" | "compact" =
-      container.clientWidth >= 300 ? "flexible" : "compact";
-    setTurnstileSize(chosenSize);
-
     widgetRenderedRef.current = true;
     widgetIdRef.current = window.turnstile.render(container, {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
       action: TURNSTILE_ACTION,
-      size: chosenSize,
+      size: turnstileSize,
       language: "pt-br",
       callback: (token: string) => {
         setTurnstileToken(token);
@@ -105,7 +116,7 @@ export function VipForm() {
         setTurnstileToken("");
       },
     });
-  }, []);
+  }, [turnstileSize]);
 
   const activateTurnstile = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -421,7 +432,7 @@ export function VipForm() {
       <div
         ref={turnstileContainerRef}
         data-testid="turnstile-container"
-        className={`${turnstileSize === "compact" ? "min-h-[140px]" : "min-h-[65px]"} w-full max-w-full overflow-hidden`}
+        className={`${turnstileSize === "compact" ? "h-[147px]" : "h-[72px]"} w-full max-w-full overflow-hidden`}
       />
 
       {errorMsg ? (
@@ -434,15 +445,13 @@ export function VipForm() {
         </p>
       ) : null}
 
-      {!turnstileToken ? (
-        <p
-          id={robotHintId}
-          aria-live="polite"
-          className="text-xs font-medium text-muted"
-        >
-          Verificando que você não é um robô…
-        </p>
-      ) : null}
+      <p
+        id={robotHintId}
+        aria-live="polite"
+        className="min-h-4 text-xs font-medium text-muted"
+      >
+        {!turnstileToken ? "Verificando que você não é um robô…" : ""}
+      </p>
 
       <button
         type="submit"
