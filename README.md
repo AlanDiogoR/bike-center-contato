@@ -73,7 +73,7 @@ supabase db push --db-url "postgresql://postgres:<SENHA_DB>@db.<PROJECT_REF>.sup
 
 ### Teste local e no CI de RLS (PostgreSQL)
 
-O teste `src/lib/vip-leads.pg.test.ts` localiza automaticamente qualquer versão disponível em `/usr/lib/postgresql/*/bin` (ou `PG_BIN`), sobe um cluster temporário com `initdb`, aplica `tests/sql/supabase-stub.sql` e `supabase/migrations/20261115000000_vip_leads.sql`, e valida RLS, privilégios e constraints localmente e no GitHub Actions (`.github/workflows/ci.yml`). O `describe.skipIf` é mantido apenas como fallback caso nenhum binário local do PostgreSQL exista.
+O teste `src/lib/vip-leads.pg.test.ts` localiza automaticamente qualquer versão disponível em `/usr/lib/postgresql/*/bin` (ou `PG_BIN`), sobe um cluster temporário com `initdb`, aplica `tests/sql/supabase-stub.sql` e todas as migrations em `supabase/migrations` (em ordem), e valida RLS, privilégios e constraints localmente e no GitHub Actions (`.github/workflows/ci.yml`). O `describe.skipIf` é mantido apenas como fallback caso nenhum binário local do PostgreSQL exista.
 
 ## Scripts
 
