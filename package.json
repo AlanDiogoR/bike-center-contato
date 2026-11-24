@@ -17,6 +17,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.9",
     "next": "^14.2.18",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
