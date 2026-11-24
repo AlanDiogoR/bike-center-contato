@@ -88,6 +88,11 @@ describe.skipIf(devePularPg(bin))(
         `begin; set local role anon; set local request.jwt.claim.role = 'anon'; set local request.jwt.claims = '{"role":"anon"}'; ${sql}; commit;`,
       );
 
+    const comoServiceRole = (sql: string) =>
+      psql(
+        `begin; set local role service_role; set local request.jwt.claim.role = 'service_role'; set local request.jwt.claims = '{"role":"service_role"}'; ${sql}; commit;`,
+      );
+
     const comoAuth = (
       email: string,
       sql: string,
@@ -318,15 +323,38 @@ describe.skipIf(devePularPg(bin))(
         ).toBe("f");
       }
 
-      // Exatamente UMA função em public executável por anon: vip_lead_signup
+      // Privilégios de EXECUTE em public.vip_lead_signup: apenas service_role
+      expect(
+        valor(
+          psql(
+            "select has_function_privilege('anon', 'public.vip_lead_signup(text,text,text,text,text,text)'::regprocedure, 'execute')::text",
+          ),
+        ),
+      ).toBe("false");
+
+      expect(
+        valor(
+          psql(
+            "select has_function_privilege('authenticated', 'public.vip_lead_signup(text,text,text,text,text,text)'::regprocedure, 'execute')::text",
+          ),
+        ),
+      ).toBe("false");
+
+      expect(
+        valor(
+          psql(
+            "select has_function_privilege('service_role', 'public.vip_lead_signup(text,text,text,text,text,text)'::regprocedure, 'execute')::text",
+          ),
+        ),
+      ).toBe("true");
+
+      // Nenhuma função em public é executável por anon
       const fnsAnon = valor(
         psql(
           "select string_agg(p.oid::regprocedure::text, '|') from pg_proc p where p.pronamespace = 'public'::regnamespace and has_function_privilege('anon', p.oid, 'execute')",
         ),
       );
-      expect(fnsAnon).toBe(
-        "vip_lead_signup(text,text,text,text,text,text)",
-      );
+      expect(fnsAnon).toBe("");
 
       const rpcMeta = valor(
         psql(
@@ -341,17 +369,43 @@ describe.skipIf(devePularPg(bin))(
         ),
       );
       expect(publicExec).toBe("false");
+
+      // Chamada real: anon e authenticated falham com permission denied; service_role passa
+      negado(
+        comoAnon(
+          "select public.vip_lead_signup('X', '+5514990000001', 'moto', 'v1')",
+        ),
+        /permission denied for function vip_lead_signup/,
+      );
+      negado(
+        comoAuth(
+          OUTRO_EMAIL,
+          "select public.vip_lead_signup('X', '+5514990000001', 'moto', 'v1')",
+          { uid: OUTRO_UID },
+        ),
+        /permission denied for function vip_lead_signup/,
+      );
+      ok(
+        comoServiceRole(
+          "select public.vip_lead_signup('X', '+5514990000001', 'moto', 'v1')",
+        ),
+      );
+      ok(
+        psql(
+          "delete from public.vip_leads where whatsapp_e164 = '+5514990000001'",
+        ),
+      );
     });
 
     test("cadastro via RPC vip_lead_signup funciona e duplicado não vaza (devolve exatamente a mesma resposta e não muda a linha)", () => {
-      const r1 = comoAnon(`
+      const r1 = comoServiceRole(`
         select public.vip_lead_signup(
           'Maria Silva', '+5514998765432', 'bike', 'v1', 'placa', 'balcao'
         )
       `);
       ok(r1);
 
-      const r2 = comoAnon(`
+      const r2 = comoServiceRole(`
         select public.vip_lead_signup(
           'João Souza', '+551433812345', 'ambos', 'v1'
         )
@@ -367,7 +421,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       // 2ª chamada da RPC com mesmo número devolve exatamente a mesma resposta (void / sem id) e não muda a linha:
-      const rDuplicado = comoAnon(`
+      const rDuplicado = comoServiceRole(`
         select public.vip_lead_signup(
           'Maria Tentando Sobrescrever', '+5514998765432', 'moto', 'v2', 'outro_src', 'outra_camp'
         )
@@ -440,7 +494,7 @@ describe.skipIf(devePularPg(bin))(
     test("consent_at forjado é ignorado (RPC não aceita consent_at e INSERT direto grava sempre now())", () => {
       // 1) A RPC não possui parâmetro para consent_at: tentar passar um 7º argumento falha
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'Forjado RPC', '+5514991113333', 'moto', 'v1', 'placa', 'balcao', '2000-01-01T00:00:00Z'::timestamptz
           )
@@ -453,8 +507,8 @@ describe.skipIf(devePularPg(bin))(
         valor(
           psql(`
             begin;
-            set local role anon;
-            set local request.jwt.claims = '{"role":"anon"}';
+            set local role service_role;
+            set local request.jwt.claims = '{"role":"service_role"}';
             select public.vip_lead_signup('Data Servidor RPC', '+5514991114444', 'bike', 'v1', null, null);
             reset role;
             select (consent_at = now() and created_at = now())::text
@@ -495,7 +549,7 @@ describe.skipIf(devePularPg(bin))(
 
     test("RPC vip_lead_signup e constraints rejeitam consent_text_version nulo/vazio e campos inválidos", () => {
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'Sem Versao', '+5514991234567', 'moto', null
           )
@@ -504,7 +558,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'Versao Vazia', '+5514991234567', 'moto', '   '
           )
@@ -513,7 +567,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'Versao Longa', '+5514991234567', 'moto', repeat('v', 65)
           )
@@ -530,7 +584,7 @@ describe.skipIf(devePularPg(bin))(
         "+551499876543a",
       ]) {
         negado(
-          comoAnon(`
+          comoServiceRole(`
             select public.vip_lead_signup(
               'Fone Invalido', '${foneInvalido}', 'moto', 'v1'
             )
@@ -541,7 +595,7 @@ describe.skipIf(devePularPg(bin))(
 
       for (const interesseInvalido of ["carro", "MOTO", "todos", ""]) {
         negado(
-          comoAnon(`
+          comoServiceRole(`
             select public.vip_lead_signup(
               'Interesse Invalido', '+5514992223333', '${interesseInvalido}', 'v1'
             )
@@ -551,7 +605,7 @@ describe.skipIf(devePularPg(bin))(
       }
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             '   ', '+5514992223333', 'moto', 'v1'
           )
@@ -560,7 +614,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             repeat('A', 81), '+5514992223333', 'moto', 'v1'
           )
@@ -569,7 +623,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'UTM Source Grande', '+5514992223333', 'moto', 'v1', repeat('s', 121), null
           )
@@ -578,7 +632,7 @@ describe.skipIf(devePularPg(bin))(
       );
 
       negado(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'UTM Campaign Grande', '+5514992223333', 'moto', 'v1', null, repeat('x', 121)
           )
@@ -816,7 +870,7 @@ describe.skipIf(devePularPg(bin))(
 
       // Recadastro via RPC após opt-out NÃO limpa opted_out_at:
       ok(
-        comoAnon(`
+        comoServiceRole(`
           select public.vip_lead_signup(
             'Maria Tentando Reativar', '+5514998765432', 'bike', 'v1'
           )
@@ -892,8 +946,8 @@ describe.skipIf(devePularPg(bin))(
         "is_vip_admin=vip_owner,vip_lead_signup=vip_owner,vip_leads_force_consent_at=vip_owner",
       );
 
-      // anon insere via RPC sob FORCE RLS mesmo com dono sem superuser/BYPASSRLS
-      const rNovo = comoAnon(`
+      // service_role insere via RPC sob FORCE RLS mesmo com dono sem superuser/BYPASSRLS
+      const rNovo = comoServiceRole(`
         select public.vip_lead_signup(
           'Carlos Sem Superuser', '+5514996660001', 'moto', 'v1', 'placa', 'balcao'
         )
@@ -909,7 +963,7 @@ describe.skipIf(devePularPg(bin))(
       ).toBe("1:Carlos Sem Superuser");
 
       // Chamada duplicada via RPC sob vip_owner continua não vazando erro nem sobrescrevendo
-      const rDup = comoAnon(`
+      const rDup = comoServiceRole(`
         select public.vip_lead_signup(
           'Carlos Duplicado', '+5514996660001', 'bike', 'v2'
         )
@@ -985,7 +1039,7 @@ describe.skipIf(devePularPg(bin))(
 
       const numero = "+5514996660009";
       const chamada = (nome: string) =>
-        comoAnon(
+        comoServiceRole(
           `select public.vip_lead_signup('${nome}', '${numero}', 'bike', 'v1')`,
         );
 
